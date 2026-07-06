@@ -1,0 +1,85 @@
+const ExcelJS = require("exceljs");
+const PDFDocument = require("pdfkit");
+
+const PROPERTY_COLUMNS = [
+  { header: "ID", key: "id", width: 8 },
+  { header: "Title", key: "title", width: 30 },
+  { header: "Description", key: "description", width: 40 },
+  { header: "Price", key: "price", width: 14 },
+  { header: "Location", key: "location", width: 22 },
+  { header: "Type", key: "type", width: 10 },
+  { header: "Status", key: "status", width: 12 },
+  { header: "Created At", key: "createdAt", width: 20 },
+];
+
+function csvEscape(value) {
+  const str = value === null || value === undefined ? "" : String(value);
+  if (/[",\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function toCsv(properties) {
+  const header = PROPERTY_COLUMNS.map((c) => c.header).join(",");
+  const rows = properties.map((p) => PROPERTY_COLUMNS.map((c) => csvEscape(p[c.key])).join(","));
+  return [header, ...rows].join("\n");
+}
+
+async function toExcelBuffer(properties) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Hargeisa Tax Property Management";
+  workbook.created = new Date();
+
+  const sheet = workbook.addWorksheet("Properties");
+  sheet.columns = PROPERTY_COLUMNS;
+  sheet.getRow(1).font = { bold: true };
+  properties.forEach((p) => sheet.addRow(p));
+
+  return workbook.xlsx.writeBuffer();
+}
+
+function toAnalyticsPdfBuffer(overview) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    doc.fontSize(20).text("Property Analytics Report", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(10).fillColor("#666666").text(`Generated ${new Date().toLocaleString()}`, { align: "center" });
+    doc.moveDown(1.5);
+    doc.fillColor("#000000");
+
+    doc.fontSize(14).text("Portfolio Totals");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    doc.text(`Total Properties: ${overview.totals.total}`);
+    doc.text(`Available: ${overview.totals.available}`);
+    doc.text(`Sold: ${overview.totals.sold}`);
+    doc.text(`Rented: ${overview.totals.rented}`);
+    doc.text(`Realized Revenue: $${Number(overview.revenue).toLocaleString()}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).text("Listings by Type");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    overview.byType.forEach((t) => doc.text(`${t.type === "sale" ? "Sale" : "Rent"}: ${t.count}`));
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).text("Monthly Creation Trend");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    if (overview.monthlyTrend.length === 0) {
+      doc.text("No properties created in the last 12 months.");
+    } else {
+      overview.monthlyTrend.forEach((m) => doc.text(`${m.month}: ${m.count} new listing(s)`));
+    }
+
+    doc.end();
+  });
+}
+
+module.exports = { toCsv, toExcelBuffer, toAnalyticsPdfBuffer };

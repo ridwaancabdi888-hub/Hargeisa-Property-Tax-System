@@ -1,0 +1,6 @@
+node_modules
+dist
+server
+e2e
+.git
+*.md
