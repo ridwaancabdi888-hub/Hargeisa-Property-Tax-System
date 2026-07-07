@@ -8,6 +8,7 @@ import StatusBadge from "../components/ui/StatusBadge";
 import Pagination from "../components/ui/Pagination";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import { listActivityLogs } from "../lib/activityLogApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import { ACTIVITY_ACTIONS, type ActivityLogEntry, type ActivityLogListMeta } from "../types/activityLog";
 
 const actionOptions = ["All Actions", ...ACTIVITY_ACTIONS];
@@ -30,6 +31,7 @@ function formatAction(action: string) {
 }
 
 export default function ActivityLog() {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState<ActivityLogEntry[]>([]);
   const [meta, setMeta] = useState<ActivityLogListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 20 });
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +86,7 @@ export default function ActivityLog() {
 
   return (
     <div>
-      <PageHeader title="Activity Log" subtitle="Audit trail of authentication and property management actions" />
+      <PageHeader title={t.pages.activityLog.title} subtitle={t.pages.activityLog.subtitle} />
 
       <Card>
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">

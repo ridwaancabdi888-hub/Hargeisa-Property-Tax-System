@@ -4,6 +4,7 @@ import PageHeader from "../components/ui/PageHeader";
 import SearchInput from "../components/ui/SearchInput";
 import FilterSelect from "../components/ui/FilterSelect";
 import { listProperties } from "../lib/propertiesApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { ListingStatus, PropertyListing } from "../types/property";
 
 const statusColors: Record<ListingStatus, string> = {
@@ -33,6 +34,8 @@ interface MappedProperty extends PropertyListing {
 }
 
 export default function GISMap() {
+  const { t } = useTranslation();
+  const statusLabel: Record<ListingStatus, string> = { available: t.common.available, sold: t.common.sold, rented: t.common.rented };
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +75,13 @@ export default function GISMap() {
 
   return (
     <div className="flex h-full flex-col">
-      <PageHeader title="GIS Map" subtitle="Geospatial mapping of marked property listings across Hargeisa" />
+      <PageHeader title={t.pages.gisMap.title} subtitle={t.pages.gisMap.subtitle} />
 
       <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="space-y-4 lg:col-span-1">
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card">
             <SearchInput
-              placeholder="Search by title or location"
+              placeholder={t.pages.gisMap.searchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -89,12 +92,12 @@ export default function GISMap() {
           </div>
 
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-card">
-            <h3 className="mb-3 text-sm font-semibold text-slate-900">Status</h3>
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">{t.pages.gisMap.statusLegend}</h3>
             <ul className="space-y-2">
               {(Object.keys(statusColors) as ListingStatus[]).map((s) => (
-                <li key={s} className="flex items-center gap-2 text-sm capitalize text-slate-600">
+                <li key={s} className="flex items-center gap-2 text-sm text-slate-600">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: statusColors[s] }} />
-                  {s}
+                  {statusLabel[s]}
                 </li>
               ))}
             </ul>
@@ -135,7 +138,7 @@ export default function GISMap() {
                       <p className="font-semibold">{p.title}</p>
                       <p>{p.location}</p>
                       <p className="mt-1 text-slate-500">
-                        {p.type === "sale" ? "Sale" : "Rent"} &middot; {p.status}
+                        {p.type === "sale" ? t.common.sale : t.common.rent} &middot; {statusLabel[p.status]}
                       </p>
                       <p className="mt-1 font-medium">${p.price.toLocaleString()}</p>
                       {p.isApproximate && <p className="mt-1 text-amber-600">Approximate location — no exact coordinates set</p>}

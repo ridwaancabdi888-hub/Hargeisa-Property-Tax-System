@@ -21,6 +21,7 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Skeleton from "../components/ui/Skeleton";
 import { getAnalyticsOverview } from "../lib/analyticsApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { AnalyticsOverview } from "../types/analytics";
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
@@ -37,6 +38,7 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function PropertyAnalytics() {
+  const { t } = useTranslation();
   const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function PropertyAnalytics() {
   if (isLoading) {
     return (
       <div>
-        <PageHeader title="Analytics" subtitle="Portfolio performance across all property listings" />
+        <PageHeader title={t.pages.propertyAnalytics.title} subtitle={t.pages.propertyAnalytics.subtitle} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
@@ -75,47 +77,51 @@ export default function PropertyAnalytics() {
   }
 
   const statusData = [
-    { status: "Available", count: overview.totals.available },
-    { status: "Sold", count: overview.totals.sold },
-    { status: "Rented", count: overview.totals.rented },
+    { status: "available", label: t.common.available, count: overview.totals.available },
+    { status: "sold", label: t.common.sold, count: overview.totals.sold },
+    { status: "rented", label: t.common.rented, count: overview.totals.rented },
   ];
 
-  const pieData = overview.byType.map((t) => ({ name: t.type === "sale" ? "Sale" : "Rent", value: t.count, key: t.type }));
+  const pieData = overview.byType.map((entry) => ({
+    name: entry.type === "sale" ? t.common.sale : t.common.rent,
+    value: entry.count,
+    key: entry.type,
+  }));
 
   return (
     <div>
       <PageHeader
-        title="Analytics"
-        subtitle="Portfolio performance across all property listings"
+        title={t.pages.propertyAnalytics.title}
+        subtitle={t.pages.propertyAnalytics.subtitle}
         action={
           <a href="/api/analytics/export/pdf">
             <Button variant="secondary" icon={<FileDown size={15} />}>
-              Export PDF
+              {t.pages.propertyAnalytics.exportPdf}
             </Button>
           </a>
         }
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard label="Total Properties" value={String(overview.totals.total)} icon={Building2} />
-        <StatCard label="Available" value={String(overview.totals.available)} icon={Tag} />
-        <StatCard label="Sold" value={String(overview.totals.sold)} icon={CheckCircle2} />
-        <StatCard label="Rented" value={String(overview.totals.rented)} icon={Key} />
-        <StatCard label="Realized Revenue" value={currency(overview.revenue)} icon={DollarSign} />
+        <StatCard label={t.pages.propertyAnalytics.totalProperties} value={String(overview.totals.total)} icon={Building2} />
+        <StatCard label={t.pages.propertyAnalytics.available} value={String(overview.totals.available)} icon={Tag} />
+        <StatCard label={t.pages.propertyAnalytics.sold} value={String(overview.totals.sold)} icon={CheckCircle2} />
+        <StatCard label={t.pages.propertyAnalytics.rented} value={String(overview.totals.rented)} icon={Key} />
+        <StatCard label={t.pages.propertyAnalytics.realizedRevenue} value={currency(overview.revenue)} icon={DollarSign} />
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card title="Properties by Status" subtitle="Current portfolio breakdown">
+        <Card title={t.pages.propertyAnalytics.propertiesByStatus} subtitle={t.pages.propertyAnalytics.propertiesByStatusSubtitle}>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <RBarChart data={statusData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                <XAxis dataKey="status" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
                 <Tooltip />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {statusData.map((entry) => (
-                    <Cell key={entry.status} fill={STATUS_COLORS[entry.status.toLowerCase()]} />
+                    <Cell key={entry.status} fill={STATUS_COLORS[entry.status]} />
                   ))}
                 </Bar>
               </RBarChart>
@@ -123,7 +129,7 @@ export default function PropertyAnalytics() {
           </div>
         </Card>
 
-        <Card title="Rent vs Sale" subtitle="Distribution by listing type">
+        <Card title={t.pages.propertyAnalytics.rentVsSale} subtitle={t.pages.propertyAnalytics.rentVsSaleSubtitle}>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -140,7 +146,7 @@ export default function PropertyAnalytics() {
         </Card>
       </div>
 
-      <Card title="Monthly Creation Trend" subtitle="New listings over the last 12 months" className="mt-4">
+      <Card title={t.pages.propertyAnalytics.monthlyTrend} subtitle={t.pages.propertyAnalytics.monthlyTrendSubtitle} className="mt-4">
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={overview.monthlyTrend}>

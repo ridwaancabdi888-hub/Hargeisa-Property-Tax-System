@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { changePassword, deleteAvatar, updateProfile, uploadAvatar } from "../lib/profileApi";
 import { ApiError } from "../lib/api";
+import { useTranslation } from "../lib/i18n/useTranslation";
 
 const roleLabel: Record<string, string> = {
   admin: "Administrator",
@@ -19,6 +20,7 @@ const roleLabel: Record<string, string> = {
 export default function Profile() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.fullName ?? "");
@@ -113,7 +115,7 @@ export default function Profile() {
 
   return (
     <div>
-      <PageHeader title="My Profile" subtitle="Your account details and access level" />
+      <PageHeader title={t.pages.profile.title} subtitle={t.pages.profile.subtitle} />
 
       <Card className="max-w-2xl">
         <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-5 dark:border-slate-700">

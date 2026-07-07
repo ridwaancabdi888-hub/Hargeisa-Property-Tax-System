@@ -24,9 +24,9 @@ import type { PropertyDetail, PropertyFormValues, PropertyListMeta, PropertyList
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
+import { useTranslation } from "../lib/i18n/useTranslation";
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const typeOptions = ["All Types", "rent", "sale"];
 const statusOptions = ["All Statuses", "available", "sold", "rented"];
@@ -40,8 +40,11 @@ const statusTone = {
 export default function PropertyListings() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const canEdit = user?.role === "admin" || user?.role === "agent";
   const canDelete = user?.role === "admin";
+  const typeLabel = { rent: t.common.rent, sale: t.common.sale };
+  const statusLabel = { available: t.common.available, sold: t.common.sold, rented: t.common.rented };
 
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [meta, setMeta] = useState<PropertyListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 10 });
@@ -140,22 +143,22 @@ export default function PropertyListings() {
   };
 
   const columns: Column<PropertyListing>[] = [
-    { header: "Title", render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
-    { header: "Location", render: (r) => r.location },
-    { header: "Price", align: "right", render: (r) => currency(r.price) },
+    { header: t.common.title, render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
+    { header: t.common.location, render: (r) => r.location },
+    { header: t.common.price, align: "right", render: (r) => currency(r.price) },
     {
-      header: "Type",
-      render: (r) => <StatusBadge status={capitalize(r.type)} tone={r.type === "sale" ? "blue" : "slate"} />,
+      header: t.common.type,
+      render: (r) => <StatusBadge status={typeLabel[r.type]} tone={r.type === "sale" ? "blue" : "slate"} />,
     },
     {
-      header: "Status",
-      render: (r) => <StatusBadge status={capitalize(r.status)} tone={statusTone[r.status]} />,
+      header: t.common.status,
+      render: (r) => <StatusBadge status={statusLabel[r.status]} tone={statusTone[r.status]} />,
     },
-    { header: "Created", render: (r) => new Date(r.createdAt).toLocaleDateString() },
+    { header: t.common.created, render: (r) => new Date(r.createdAt).toLocaleDateString() },
     ...((canEdit || canDelete
       ? [
           {
-            header: "Actions",
+            header: t.common.actions,
             align: "right" as const,
             render: (r: PropertyListing) => (
               <div className="flex justify-end gap-3">
@@ -187,8 +190,8 @@ export default function PropertyListings() {
   return (
     <div>
       <PageHeader
-        title="Properties"
-        subtitle="Manage rental and sale property listings"
+        title={t.pages.propertyListings.title}
+        subtitle={t.pages.propertyListings.subtitle}
         action={
           <div className="flex items-center gap-2">
             <a href={getCsvExportUrl(exportParams)}>
@@ -203,7 +206,7 @@ export default function PropertyListings() {
             </a>
             {canEdit && (
               <Button icon={<Plus size={16} />} onClick={() => setIsCreating(true)}>
-                Add Property
+                {t.pages.propertyListings.addProperty}
               </Button>
             )}
           </div>
@@ -245,7 +248,7 @@ export default function PropertyListings() {
         {isLoading ? (
           <TableSkeleton rows={6} columns={canEdit || canDelete ? 7 : 6} />
         ) : properties.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">No properties match your search or filters.</p>
+          <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
           <DataTable columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
         )}

@@ -7,6 +7,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
 import { createBackup, getBackupDownloadUrl, listBackups, restoreBackup } from "../lib/backupApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { BackupEntry } from "../types/backup";
 
 function formatSize(bytes: number) {
@@ -17,6 +18,7 @@ function formatSize(bytes: number) {
 
 export default function Backups() {
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const [backups, setBackups] = useState<BackupEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -74,7 +76,7 @@ export default function Backups() {
 
   return (
     <div>
-      <PageHeader title="Backups" subtitle="Create, download, and restore database backups" />
+      <PageHeader title={t.pages.backups.title} subtitle={t.pages.backups.subtitle} />
 
       <div className="max-w-3xl space-y-4">
         <Card title="Create Backup" subtitle="Take a snapshot of the current database">

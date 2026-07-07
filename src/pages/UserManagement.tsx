@@ -12,6 +12,7 @@ import ConfirmModal from "../components/ui/ConfirmModal";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import CreateUserModal from "../components/users/CreateUserModal";
 import { createUser, listUsers, updateUserRole, updateUserStatus } from "../lib/usersApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { CreateUserValues, ManagedUser, UserListMeta } from "../types/user";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -19,11 +20,11 @@ import { ApiError } from "../lib/api";
 
 const roleOptions = ["All Roles", "admin", "agent", "viewer"];
 const roleTone = { admin: "blue", agent: "slate", viewer: "amber" } as const;
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export default function UserManagement() {
   const { user: currentUser } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [meta, setMeta] = useState<UserListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 10 });
@@ -109,14 +110,14 @@ export default function UserManagement() {
   }
 
   const columns: Column<ManagedUser>[] = [
-    { header: "Full Name", render: (r) => <span className="font-medium text-slate-900">{r.fullName}</span> },
-    { header: "Username", render: (r) => r.username },
-    { header: "Email", render: (r) => r.email },
+    { header: t.pages.userManagement.fullName, render: (r) => <span className="font-medium text-slate-900">{r.fullName}</span> },
+    { header: t.pages.userManagement.username, render: (r) => r.username },
+    { header: t.pages.userManagement.email, render: (r) => r.email },
     {
-      header: "Role",
+      header: t.pages.userManagement.role,
       render: (r) =>
         r.role === "admin" || r.id === currentUser?.id ? (
-          <StatusBadge status={capitalize(r.role)} tone={roleTone[r.role]} />
+          <StatusBadge status={t.roleLabel[r.role]} tone={roleTone[r.role]} />
         ) : (
           <FilterSelect
             className="w-28 capitalize"
@@ -127,12 +128,12 @@ export default function UserManagement() {
         ),
     },
     {
-      header: "Status",
-      render: (r) => <StatusBadge status={r.isActive ? "Active" : "Inactive"} tone={r.isActive ? "green" : "red"} />,
+      header: t.common.status,
+      render: (r) => <StatusBadge status={r.isActive ? t.common.active : t.common.inactive} tone={r.isActive ? "green" : "red"} />,
     },
-    { header: "Joined", render: (r) => new Date(r.createdAt).toLocaleDateString() },
+    { header: t.pages.userManagement.joined, render: (r) => new Date(r.createdAt).toLocaleDateString() },
     {
-      header: "Actions",
+      header: t.common.actions,
       align: "right",
       render: (r) => {
         if (r.role === "admin" || r.id === currentUser?.id) {
@@ -143,14 +144,14 @@ export default function UserManagement() {
             className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
             onClick={() => setDeactivating(r)}
           >
-            <UserX size={13} /> Deactivate
+            <UserX size={13} /> {t.pages.userManagement.deactivate}
           </button>
         ) : (
           <button
             className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:underline"
             onClick={() => handleActivate(r)}
           >
-            <UserCheck size={13} /> Activate
+            <UserCheck size={13} /> {t.pages.userManagement.activate}
           </button>
         );
       },
@@ -160,11 +161,11 @@ export default function UserManagement() {
   return (
     <div>
       <PageHeader
-        title="User Management"
-        subtitle="Create, deactivate, and manage roles for agent and viewer accounts"
+        title={t.pages.userManagement.title}
+        subtitle={t.pages.userManagement.subtitle}
         action={
           <Button icon={<Plus size={16} />} onClick={() => setIsCreating(true)}>
-            Add User
+            {t.pages.userManagement.addUser}
           </Button>
         }
       />
@@ -180,7 +181,7 @@ export default function UserManagement() {
         {isLoading ? (
           <TableSkeleton rows={6} columns={7} />
         ) : users.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">No users match your search or filters.</p>
+          <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
           <DataTable columns={columns} rows={users} rowKey={(r) => String(r.id)} />
         )}

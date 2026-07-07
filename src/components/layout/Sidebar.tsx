@@ -14,31 +14,28 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "../../lib/i18n/useTranslation";
+import type { TranslationDict } from "../../lib/i18n/translations";
 import type { UserRole } from "../../types/auth";
 
-const navItems: { to: string; label: string; icon: typeof LayoutDashboard; roles?: UserRole[] }[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/properties", label: "Property Management", icon: Building2 },
-  { to: "/property-listings", label: "Properties", icon: Home },
-  { to: "/property-analytics", label: "Analytics", icon: BarChart3, roles: ["admin"] },
-  { to: "/tax-management", label: "Tax Management", icon: Landmark, roles: ["admin"] },
-  { to: "/gis-map", label: "GIS Map", icon: Map },
-  { to: "/reports", label: "Reports", icon: FileBarChart },
-  { to: "/activity-log", label: "Activity Log", icon: ScrollText, roles: ["admin"] },
-  { to: "/user-management", label: "User Management", icon: Users, roles: ["admin"] },
-  { to: "/backups", label: "Backups", icon: DatabaseBackup, roles: ["admin"] },
-  { to: "/settings", label: "Settings", icon: SettingsIcon },
+const navItems: { to: string; navKey: keyof TranslationDict["nav"]; icon: typeof LayoutDashboard; roles?: UserRole[] }[] = [
+  { to: "/dashboard", navKey: "dashboard", icon: LayoutDashboard },
+  { to: "/properties", navKey: "propertyManagement", icon: Building2 },
+  { to: "/property-listings", navKey: "properties", icon: Home },
+  { to: "/property-analytics", navKey: "analytics", icon: BarChart3, roles: ["admin"] },
+  { to: "/tax-management", navKey: "taxManagement", icon: Landmark, roles: ["admin"] },
+  { to: "/gis-map", navKey: "gisMap", icon: Map },
+  { to: "/reports", navKey: "reports", icon: FileBarChart },
+  { to: "/activity-log", navKey: "activityLog", icon: ScrollText, roles: ["admin"] },
+  { to: "/user-management", navKey: "userManagement", icon: Users, roles: ["admin"] },
+  { to: "/backups", navKey: "backups", icon: DatabaseBackup, roles: ["admin"] },
+  { to: "/settings", navKey: "settings", icon: SettingsIcon },
 ];
-
-const roleLabel: Record<UserRole, string> = {
-  admin: "District Administrator",
-  agent: "Agent",
-  viewer: "Viewer",
-};
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const visibleNavItems = navItems.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
@@ -72,7 +69,7 @@ export default function Sidebar() {
       </div>
 
       <nav className="mt-2 flex-1 space-y-1 px-3">
-        {visibleNavItems.map(({ to, label, icon: Icon }) => (
+        {visibleNavItems.map(({ to, navKey, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -85,7 +82,7 @@ export default function Sidebar() {
             }
           >
             <Icon size={17} />
-            {label}
+            {t.nav[navKey]}
           </NavLink>
         ))}
       </nav>
@@ -98,10 +95,10 @@ export default function Sidebar() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-white">{user?.fullName}</p>
-              <p className="truncate text-[11px] text-slate-400">{user ? roleLabel[user.role] : ""}</p>
+              <p className="truncate text-[11px] text-slate-400">{user ? t.roleLabel[user.role] : ""}</p>
             </div>
           </NavLink>
-          <button type="button" aria-label="Log out" onClick={handleLogout} className="text-slate-400 hover:text-white">
+          <button type="button" aria-label={t.nav.logout} onClick={handleLogout} className="text-slate-400 hover:text-white">
             <LogOut size={16} />
           </button>
         </div>

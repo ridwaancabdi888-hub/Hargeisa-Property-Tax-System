@@ -12,6 +12,7 @@ import Pagination from "../components/ui/Pagination";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import Skeleton from "../components/ui/Skeleton";
 import { getPropertyCounts, getTaxBillUrl, listProperties } from "../lib/propertiesApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { PropertyListMeta, PropertyListing } from "../types/property";
 
 // Illustrative flat municipal tax rate, matching TAX_RATE in
@@ -20,12 +21,13 @@ import type { PropertyListMeta, PropertyListing } from "../types/property";
 const TAX_RATE = 0.01;
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const statusOptions = ["All Statuses", "available", "sold", "rented"];
 const typeOptions = ["All Types", "rent", "sale"];
 const statusTone = { available: "green", rented: "amber", sold: "slate" } as const;
 
 export default function TaxManagement() {
+  const { t } = useTranslation();
+  const statusLabel = { available: t.common.available, sold: t.common.sold, rented: t.common.rented };
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [meta, setMeta] = useState<PropertyListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 10 });
   const [isLoading, setIsLoading] = useState(true);
@@ -75,17 +77,17 @@ export default function TaxManagement() {
   }, [properties]);
 
   const columns: Column<PropertyListing>[] = [
-    { header: "Property", render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
-    { header: "Location", render: (r) => r.location },
-    { header: "Listing Price", align: "right", render: (r) => currency(r.price) },
+    { header: t.common.title, render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
+    { header: t.common.location, render: (r) => r.location },
+    { header: t.common.price, align: "right", render: (r) => currency(r.price) },
     { header: "Est. Tax", align: "right", render: (r) => currency(r.price * TAX_RATE) },
-    { header: "Status", render: (r) => <StatusBadge status={capitalize(r.status)} tone={statusTone[r.status]} /> },
+    { header: t.common.status, render: (r) => <StatusBadge status={statusLabel[r.status]} tone={statusTone[r.status]} /> },
     {
-      header: "Actions",
+      header: t.common.actions,
       align: "right",
       render: (r) => (
         <a href={getTaxBillUrl(r.id)} className="inline-flex items-center gap-1.5 text-xs font-medium text-navy-700 hover:underline">
-          <Receipt size={13} /> Generate Bill
+          <Receipt size={13} /> {t.pages.taxManagement.generateBill}
         </a>
       ),
     },
@@ -94,11 +96,11 @@ export default function TaxManagement() {
   return (
     <div>
       <PageHeader
-        title="Tax Management"
-        subtitle="Illustrative municipal property tax assessment and bill generation"
+        title={t.pages.taxManagement.title}
+        subtitle={t.pages.taxManagement.subtitle}
         action={
           <Button variant="secondary" icon={<FilterIcon size={15} />} onClick={() => setShowFilters((v) => !v)}>
-            Filter
+            {t.common.filter}
           </Button>
         }
       />
@@ -106,9 +108,9 @@ export default function TaxManagement() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {totals ? (
           <>
-            <StatCard label="Total Properties" value={String(totals.total)} icon={Building2} />
-            <StatCard label="Total Assessed Value" value={currency(totals.assessedValue)} icon={DollarSign} />
-            <StatCard label="Estimated Tax Levied" value={currency(totals.assessedValue * TAX_RATE)} icon={Percent} />
+            <StatCard label={t.pages.taxManagement.totalProperties} value={String(totals.total)} icon={Building2} />
+            <StatCard label={t.pages.taxManagement.totalAssessedValue} value={currency(totals.assessedValue)} icon={DollarSign} />
+            <StatCard label={t.pages.taxManagement.estimatedTaxLevied} value={currency(totals.assessedValue * TAX_RATE)} icon={Percent} />
           </>
         ) : (
           Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)
@@ -116,7 +118,7 @@ export default function TaxManagement() {
       </div>
 
       <Card
-        title="Property Tax Roll"
+        title={t.pages.taxManagement.propertyTaxRoll}
         subtitle={`Generate a per-property tax bill at a flat illustrative rate of ${(TAX_RATE * 100).toFixed(1)}%`}
         className="mt-6"
       >
@@ -133,7 +135,7 @@ export default function TaxManagement() {
         {isLoading ? (
           <TableSkeleton rows={6} columns={6} />
         ) : properties.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">No properties match your search or filters.</p>
+          <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
           <DataTable columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
         )}

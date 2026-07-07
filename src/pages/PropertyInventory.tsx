@@ -12,12 +12,12 @@ import Pagination from "../components/ui/Pagination";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import PropertyFormModal from "../components/properties/PropertyFormModal";
 import { createProperty, getCsvExportUrl, getProperty, getPropertyCounts, listProperties, updateProperty } from "../lib/propertiesApi";
+import { useTranslation } from "../lib/i18n/useTranslation";
 import type { PropertyDetail, PropertyFormValues, PropertyListMeta, PropertyListing } from "../types/property";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const statusOptions = ["All Statuses", "available", "sold", "rented"];
 const typeOptions = ["All Types", "rent", "sale"];
@@ -26,7 +26,10 @@ const statusTone = { available: "green", rented: "amber", sold: "slate" } as con
 export default function PropertyInventory() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useTranslation();
   const canEdit = user?.role === "admin" || user?.role === "agent";
+  const typeLabel = { rent: t.common.rent, sale: t.common.sale };
+  const statusLabel = { available: t.common.available, sold: t.common.sold, rented: t.common.rented };
 
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [meta, setMeta] = useState<PropertyListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 10 });
@@ -109,15 +112,15 @@ export default function PropertyInventory() {
   };
 
   const columns: Column<PropertyListing>[] = [
-    { header: "Title", render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
-    { header: "Location", render: (r) => r.location },
-    { header: "Price", align: "right", render: (r) => currency(r.price) },
-    { header: "Type", render: (r) => <StatusBadge status={capitalize(r.type)} tone={r.type === "sale" ? "blue" : "slate"} /> },
-    { header: "Status", render: (r) => <StatusBadge status={capitalize(r.status)} tone={statusTone[r.status]} /> },
+    { header: t.common.title, render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
+    { header: t.common.location, render: (r) => r.location },
+    { header: t.common.price, align: "right", render: (r) => currency(r.price) },
+    { header: t.common.type, render: (r) => <StatusBadge status={typeLabel[r.type]} tone={r.type === "sale" ? "blue" : "slate"} /> },
+    { header: t.common.status, render: (r) => <StatusBadge status={statusLabel[r.status]} tone={statusTone[r.status]} /> },
     ...((canEdit
       ? [
           {
-            header: "Actions",
+            header: t.common.actions,
             align: "right" as const,
             render: (r: PropertyListing) => (
               <button className="text-slate-400 hover:text-navy-700" aria-label="Edit property" onClick={() => handleEditClick(r)}>
@@ -132,15 +135,15 @@ export default function PropertyInventory() {
   return (
     <div>
       <PageHeader
-        title="Property Inventory"
-        subtitle="Manage the municipal property register"
-        action={canEdit ? <Button icon={<Plus size={16} />} onClick={() => setIsCreating(true)}>Add Property</Button> : undefined}
+        title={t.pages.propertyInventory.title}
+        subtitle={t.pages.propertyInventory.subtitle}
+        action={canEdit ? <Button icon={<Plus size={16} />} onClick={() => setIsCreating(true)}>{t.pages.propertyInventory.addProperty}</Button> : undefined}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Total Properties" value={String(counts.total)} icon={Building2} />
-        <StatCard label="Available" value={String(counts.available)} icon={Tag} />
-        <StatCard label="Rented" value={String(counts.rented)} icon={Key} />
+        <StatCard label={t.pages.propertyInventory.totalProperties} value={String(counts.total)} icon={Building2} />
+        <StatCard label={t.pages.propertyInventory.available} value={String(counts.available)} icon={Tag} />
+        <StatCard label={t.pages.propertyInventory.rented} value={String(counts.rented)} icon={Key} />
       </div>
 
       <Card className="mt-6">
@@ -150,7 +153,7 @@ export default function PropertyInventory() {
           <FilterSelect className="capitalize" options={typeOptions} value={type} onChange={(e) => setType(e.target.value)} />
           <a href={getCsvExportUrl(exportParams)}>
             <Button variant="secondary" icon={<Download size={15} />}>
-              Export CSV
+              {t.pages.propertyInventory.exportCsv}
             </Button>
           </a>
         </div>
@@ -160,7 +163,7 @@ export default function PropertyInventory() {
         {isLoading ? (
           <TableSkeleton rows={6} columns={canEdit ? 6 : 5} />
         ) : properties.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">No properties match your search or filters.</p>
+          <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
           <DataTable columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
         )}

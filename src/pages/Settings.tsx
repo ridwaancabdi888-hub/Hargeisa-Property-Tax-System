@@ -8,10 +8,12 @@ import { useSettings } from "../context/SettingsContext";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
 import { DATE_FORMATS, LANGUAGES, type DateFormat, type Theme } from "../types/settings";
+import { useTranslation } from "../lib/i18n/useTranslation";
 
 export default function Settings() {
   const { settings, isLoading, updateSettings } = useSettings();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   const [theme, setTheme] = useState<Theme>("light");
   const [language, setLanguage] = useState("en");
@@ -59,10 +61,10 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title="Settings" subtitle="Manage your appearance, locale, and notification preferences" />
+      <PageHeader title={t.pages.settings.title} subtitle={t.pages.settings.subtitle} />
 
       <div className="max-w-2xl space-y-4">
-        <Card title="Appearance" subtitle="Choose how the portal looks for you">
+        <Card title={t.pages.settings.appearance} subtitle={t.pages.settings.appearanceSubtitle}>
           <div className="flex gap-3">
             <button
               type="button"
@@ -73,7 +75,7 @@ export default function Settings() {
                   : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
             >
-              <Sun size={16} /> Light
+              <Sun size={16} /> {t.pages.settings.light}
             </button>
             <button
               type="button"
@@ -84,15 +86,15 @@ export default function Settings() {
                   : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
               }`}
             >
-              <Moon size={16} /> Dark
+              <Moon size={16} /> {t.pages.settings.dark}
             </button>
           </div>
         </Card>
 
-        <Card title="Locale" subtitle="Language, timezone, and date display format">
+        <Card title={t.pages.settings.locale} subtitle={t.pages.settings.localeSubtitle}>
           <div className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Language</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">{t.pages.settings.language}</label>
               <FilterSelect
                 className="w-full"
                 options={LANGUAGES.map((l) => l.code)}
@@ -101,7 +103,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Timezone</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">{t.pages.settings.timezone}</label>
               <input
                 type="text"
                 value={timezone}
@@ -111,7 +113,7 @@ export default function Settings() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">Date Format</label>
+              <label className="mb-1.5 block text-xs font-medium text-slate-600 dark:text-slate-400">{t.pages.settings.dateFormat}</label>
               <FilterSelect
                 className="w-full"
                 options={DATE_FORMATS}
@@ -122,10 +124,10 @@ export default function Settings() {
           </div>
         </Card>
 
-        <Card title="Notifications" subtitle="Choose which property events notify you">
+        <Card title={t.pages.settings.notifications} subtitle={t.pages.settings.notificationsSubtitle}>
           <div className="space-y-3">
             <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300">
-              New property created
+              {t.pages.settings.notifyCreated}
               <input
                 type="checkbox"
                 checked={notifyPropertyCreated}
@@ -134,7 +136,7 @@ export default function Settings() {
               />
             </label>
             <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300">
-              Property marked as sold
+              {t.pages.settings.notifySold}
               <input
                 type="checkbox"
                 checked={notifyPropertySold}
@@ -143,7 +145,7 @@ export default function Settings() {
               />
             </label>
             <label className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300">
-              Property deleted
+              {t.pages.settings.notifyDeleted}
               <input
                 type="checkbox"
                 checked={notifyPropertyDeleted}
@@ -156,7 +158,7 @@ export default function Settings() {
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Settings"}
+            {isSaving ? t.pages.settings.saving : t.pages.settings.saveSettings}
           </Button>
         </div>
       </div>
