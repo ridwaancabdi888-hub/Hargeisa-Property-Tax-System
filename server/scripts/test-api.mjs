@@ -37,19 +37,36 @@ async function run() {
   const createAgentBody = await createAgentRes.json();
   check("created account defaults to role=agent", createAgentBody.user?.role, "agent");
 
-  // 3b. Admin attempts to escalate a new account to 'admin' — must be rejected outright
-  const escalateRes = await fetch(`${BASE_URL}/users`, {
+  // 3b. Admin creates another admin account
+  const secondAdminUsername = `admin2_${Date.now()}`;
+  const secondAdminRes = await fetch(`${BASE_URL}/users`, {
     method: "POST",
     headers: adminHeaders,
     body: JSON.stringify({
-      fullName: "Should Not Become Admin",
-      username: `escalate_${Date.now()}`,
-      email: `escalate_${Date.now()}@hargeisatax.gov.so`,
+      fullName: "Second Admin",
+      username: secondAdminUsername,
+      email: `${secondAdminUsername}@hargeisatax.gov.so`,
       password: "Whatever123",
       role: "admin",
     }),
   });
-  check("creating a user with role=admin is rejected (400)", escalateRes.status, 400);
+  check("admin creates another admin account", secondAdminRes.status, 201);
+  const secondAdminBody = await secondAdminRes.json();
+  check("second admin has role=admin", secondAdminBody.user?.role, "admin");
+
+  // 3c. An invalid role value is still rejected
+  const invalidRoleRes = await fetch(`${BASE_URL}/users`, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      fullName: "Bad Role",
+      username: `badrole_${Date.now()}`,
+      email: `badrole_${Date.now()}@hargeisatax.gov.so`,
+      password: "Whatever123",
+      role: "superuser",
+    }),
+  });
+  check("creating a user with an invalid role is rejected (400)", invalidRoleRes.status, 400);
 
   // 4. Login as the new agent account
   const agentLoginRes = await fetch(`${BASE_URL}/auth/login`, {

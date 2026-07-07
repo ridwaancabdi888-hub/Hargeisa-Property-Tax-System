@@ -97,8 +97,6 @@ const createUser = asyncHandler(async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  // role is constrained to 'agent'/'viewer' by the route validator — this endpoint
-  // must never be usable to mint additional admins.
   const user = await UserModel.create({
     fullName,
     username,
@@ -106,6 +104,13 @@ const createUser = asyncHandler(async (req, res) => {
     passwordHash,
     role: role || "agent",
     createdBy: req.user.id,
+  });
+
+  await logActivity(req, {
+    action: "user_created",
+    entityType: "user",
+    entityId: user.id,
+    description: `Created ${user.role} account "${user.username}"`,
   });
 
   res.status(201).json({ success: true, user: toPublicUser(user) });

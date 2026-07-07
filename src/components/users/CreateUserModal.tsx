@@ -120,7 +120,7 @@ export default function CreateUserModal({ onSubmit, onClose }: CreateUserModalPr
             <label className="mb-1.5 block text-xs font-medium text-slate-600">Role</label>
             <FilterSelect
               className="w-full capitalize"
-              options={["agent", "viewer"]}
+              options={["admin", "agent", "viewer"]}
               value={values.role}
               onChange={(e) => update("role", e.target.value as CreateUserValues["role"])}
             />

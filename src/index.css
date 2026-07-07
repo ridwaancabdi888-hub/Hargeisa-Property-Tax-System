@@ -21,3 +21,17 @@
   border-radius: 0.75rem;
   z-index: 0;
 }
+
+@keyframes beacon-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 20px 4px rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 32px 10px rgba(255, 255, 255, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.animate-beacon-breathe {
+  animation: beacon-breathe 3.2s ease-in-out infinite;
+}

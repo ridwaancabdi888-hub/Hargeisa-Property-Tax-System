@@ -54,7 +54,7 @@ router.post(
       .bail()
       .matches(STRONG_PASSWORD_REGEX)
       .withMessage(STRONG_PASSWORD_MESSAGE),
-    body("role").optional().isIn(["agent", "viewer"]).withMessage("Role must be 'agent' or 'viewer'"),
+    body("role").optional().isIn(["admin", "agent", "viewer"]).withMessage("Role must be 'admin', 'agent' or 'viewer'"),
   ],
   validate,
   userController.createUser

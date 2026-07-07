@@ -34,14 +34,27 @@ describe("Users (admin account management)", () => {
     expect(res.body.user.role).toBe("viewer");
   });
 
-  test("attempting to create an account with role=admin is rejected (400)", async () => {
-    const username = `escalate_${Date.now()}`;
+  test("admin can create another admin account", async () => {
+    const username = `admin2_${Date.now()}`;
     const res = await adminAgent.post("/api/users").set("X-CSRF-Token", csrfToken).send({
-      fullName: "Should Not Be Admin",
+      fullName: "Second Admin",
       username,
       email: `${username}@example.com`,
       password: "TestPass1",
       role: "admin",
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.user.role).toBe("admin");
+  });
+
+  test("an invalid role is rejected (400)", async () => {
+    const username = `badrole_${Date.now()}`;
+    const res = await adminAgent.post("/api/users").set("X-CSRF-Token", csrfToken).send({
+      fullName: "Bad Role",
+      username,
+      email: `${username}@example.com`,
+      password: "TestPass1",
+      role: "superuser",
     });
     expect(res.status).toBe(400);
   });

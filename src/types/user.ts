@@ -32,5 +32,5 @@ export interface CreateUserValues {
   username: string;
   email: string;
   password: string;
-  role: "agent" | "viewer";
+  role: UserRole;
 }

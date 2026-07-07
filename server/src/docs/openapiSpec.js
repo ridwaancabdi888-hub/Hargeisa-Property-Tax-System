@@ -220,7 +220,7 @@ module.exports = {
       },
       post: {
         tags: ["Users"],
-        summary: "Create an agent/viewer account (admin only)",
+        summary: "Create a user account, including additional admins (admin only)",
         security: [cookieAuth],
         requestBody: {
           required: true,
@@ -234,7 +234,7 @@ module.exports = {
                   username: { type: "string", example: "jane_agent" },
                   email: { type: "string", example: "jane@hargeisatax.gov.so" },
                   password: { type: "string", example: "StrongPass1" },
-                  role: { type: "string", enum: ["agent", "viewer"], example: "agent", description: "Defaults to 'agent'. Never allows 'admin'." },
+                  role: { type: "string", enum: ["admin", "agent", "viewer"], example: "agent", description: "Defaults to 'agent'." },
                 },
               },
             },
