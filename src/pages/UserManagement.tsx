@@ -144,9 +144,7 @@ export default function UserManagement() {
       header: t.common.actions,
       align: "right",
       render: (r) => {
-        if (r.role === "admin" || r.id === currentUser?.id) {
-          return <span className="text-xs text-slate-400">—</span>;
-        }
+        const canManageStatus = r.role !== "admin" && r.id !== currentUser?.id;
         return (
           <div className="flex items-center justify-end gap-3">
             <button
@@ -155,7 +153,7 @@ export default function UserManagement() {
             >
               <KeyRound size={13} /> Reset Password
             </button>
-            {r.isActive ? (
+            {!canManageStatus ? null : r.isActive ? (
               <button
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
                 onClick={() => setDeactivating(r)}

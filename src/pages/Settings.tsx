@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Sun, Moon, Check, Loader2 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
 import FilterSelect from "../components/ui/FilterSelect";
 import { useSettings } from "../context/SettingsContext";
 import { useToast } from "../context/ToastContext";
@@ -22,7 +21,9 @@ export default function Settings() {
   const [notifyPropertyCreated, setNotifyPropertyCreated] = useState(true);
   const [notifyPropertySold, setNotifyPropertySold] = useState(true);
   const [notifyPropertyDeleted, setNotifyPropertyDeleted] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  const skipNextAutoSave = useRef(true);
 
   useEffect(() => {
     if (!settings) return;
@@ -33,27 +34,42 @@ export default function Settings() {
     setNotifyPropertyCreated(settings.notifyPropertyCreated);
     setNotifyPropertySold(settings.notifyPropertySold);
     setNotifyPropertyDeleted(settings.notifyPropertyDeleted);
+    skipNextAutoSave.current = true;
   }, [settings]);
 
-  async function handleSave() {
-    setIsSaving(true);
-    try {
-      await updateSettings({
-        theme,
-        language,
-        timezone,
-        dateFormat,
-        notifyPropertyCreated,
-        notifyPropertySold,
-        notifyPropertyDeleted,
-      });
-      showToast("Settings saved successfully");
-    } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Failed to save settings.", "error");
-    } finally {
-      setIsSaving(false);
+  // Auto-save: any change to a setting below saves itself after a short pause
+  // (debounced so typing a timezone doesn't fire a request per keystroke). The
+  // pause right after settings first load is skipped so loading them doesn't
+  // immediately "save" them back.
+  useEffect(() => {
+    if (!settings) return;
+    if (skipNextAutoSave.current) {
+      skipNextAutoSave.current = false;
+      return;
     }
-  }
+
+    setSaveStatus("saving");
+    const timeout = setTimeout(async () => {
+      try {
+        await updateSettings({
+          theme,
+          language,
+          timezone,
+          dateFormat,
+          notifyPropertyCreated,
+          notifyPropertySold,
+          notifyPropertyDeleted,
+        });
+        setSaveStatus("saved");
+      } catch (err) {
+        setSaveStatus("idle");
+        showToast(err instanceof ApiError ? err.message : "Failed to save settings.", "error");
+      }
+    }, 600);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme, language, timezone, dateFormat, notifyPropertyCreated, notifyPropertySold, notifyPropertyDeleted]);
 
   if (isLoading) {
     return <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">Loading settings...</p>;
@@ -61,7 +77,24 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title={t.pages.settings.title} subtitle={t.pages.settings.subtitle} />
+      <PageHeader
+        title={t.pages.settings.title}
+        subtitle={t.pages.settings.subtitle}
+        action={
+          <div className="flex h-8 items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+            {saveStatus === "saving" && (
+              <>
+                <Loader2 size={13} className="animate-spin" /> {t.pages.settings.saving}
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <Check size={13} className="text-emerald-600" /> {t.pages.settings.saved}
+              </>
+            )}
+          </div>
+        }
+      />
 
       <div className="max-w-2xl space-y-4">
         <Card title={t.pages.settings.appearance} subtitle={t.pages.settings.appearanceSubtitle}>
@@ -155,12 +188,6 @@ export default function Settings() {
             </label>
           </div>
         </Card>
-
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? t.pages.settings.saving : t.pages.settings.saveSettings}
-          </Button>
-        </div>
       </div>
     </div>
   );

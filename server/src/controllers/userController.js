@@ -90,13 +90,10 @@ const resetPassword = asyncHandler(async (req, res) => {
   if (!target) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
-  if (target.role === "admin") {
-    return res.status(400).json({ success: false, message: "Admin passwords cannot be reset here" });
-  }
-  if (Number(req.params.id) === req.user.id) {
-    return res.status(400).json({ success: false, message: "Use your Profile page to change your own password" });
-  }
 
+  // Unlike status/role changes, resetting a password carries no self-lockout
+  // risk (the admin is already authenticated) — any admin may reset any
+  // account's password here, including another admin's or their own.
   const passwordHash = await bcrypt.hash(req.body.newPassword, 12);
   await UserModel.updatePassword(req.params.id, passwordHash);
 

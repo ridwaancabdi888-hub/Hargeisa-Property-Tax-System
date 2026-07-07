@@ -292,7 +292,7 @@ module.exports = {
     "/users/{id}/password": {
       patch: {
         tags: ["Users"],
-        summary: "Admin-reset an agent/viewer account's password (admin only)",
+        summary: "Reset any account's password, including admins and your own (admin only)",
         security: [cookieAuth],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
         requestBody: {
@@ -305,7 +305,6 @@ module.exports = {
         },
         responses: {
           200: { description: "Password reset", content: { "application/json": { schema: successEnvelope(null) } } },
-          400: { description: "Cannot target an admin account or your own account", content: { "application/json": { schema: errorEnvelope } } },
           404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
         },
       },
