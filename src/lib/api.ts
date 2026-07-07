@@ -17,16 +17,32 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 // Reads the non-httpOnly csrf_token cookie the backend sets on every response
 // (double-submit-cookie CSRF pattern) so it can be echoed back as a header on
-// mutating requests. The cookie is set before any user-initiated action happens
-// (e.g. the initial GET /api/auth/me on app load), so it's always present by
-// the time a form gets submitted.
+// mutating requests.
 function getCsrfCookie(): string | null {
   const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function csrfHeaders(method: string): Record<string, string> {
+let csrfPrimingPromise: Promise<void> | null = null;
+
+// The csrf_token cookie normally arrives piggybacked on the app's mount-time
+// GET /api/auth/me. On a slow/high-latency connection a mutating request (e.g.
+// submitting the login form) can fire before that GET resolves, so the cookie
+// isn't there yet. Explicitly prime it with a lightweight GET first rather than
+// racing an unrelated background request.
+async function ensureCsrfCookie(): Promise<void> {
+  if (getCsrfCookie()) return;
+  if (!csrfPrimingPromise) {
+    csrfPrimingPromise = fetch("/api/health", { credentials: "include" })
+      .catch(() => {})
+      .then(() => undefined);
+  }
+  await csrfPrimingPromise;
+}
+
+async function csrfHeaders(method: string): Promise<Record<string, string>> {
   if (SAFE_METHODS.has(method.toUpperCase())) return {};
+  await ensureCsrfCookie();
   const token = getCsrfCookie();
   return token ? { "X-CSRF-Token": token } : {};
 }
@@ -37,7 +53,7 @@ export async function apiFetch<T = unknown>(path: string, options: RequestInit =
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
-      ...csrfHeaders(method),
+      ...(await csrfHeaders(method)),
       ...options.headers,
     },
     ...options,
@@ -62,7 +78,7 @@ export async function apiUpload<T = unknown>(path: string, formData: FormData, o
     body: formData,
     ...options,
     headers: {
-      ...csrfHeaders(method),
+      ...(await csrfHeaders(method)),
       ...options.headers,
     },
   });

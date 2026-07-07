@@ -16,6 +16,19 @@ const {
   SEED_ADMIN_FULL_NAME,
 } = process.env;
 
+// "ADD COLUMN IF NOT EXISTS" is a MariaDB-only extension — real MySQL (e.g.
+// Railway's MySQL 9.4) rejects it with a syntax error. Check information_schema
+// first so this works identically on both engines.
+async function addColumnIfMissing(connection, dbName, table, column, definitionSql) {
+  const [rows] = await connection.query(
+    `SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [dbName, table, column]
+  );
+  if (rows[0].cnt > 0) return;
+  await connection.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definitionSql}`);
+}
+
 async function main() {
   const bootstrapConnection = await mysql.createConnection({
     host: DB_HOST,
@@ -60,17 +73,11 @@ async function main() {
 
   // Phase 5: profile pictures. Schema.sql's CREATE TABLE IF NOT EXISTS won't add a
   // column to the already-existing users table, so add it explicitly (idempotent).
-  await connection.query(
-    "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255) NULL"
-  );
+  await addColumnIfMissing(connection, DB_NAME, "users", "avatar_url", "VARCHAR(255) NULL");
 
   // GIS map coordinates. Optional — only properties with both set are plotted.
-  await connection.query(
-    "ALTER TABLE properties ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7) NULL AFTER location"
-  );
-  await connection.query(
-    "ALTER TABLE properties ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NULL AFTER latitude"
-  );
+  await addColumnIfMissing(connection, DB_NAME, "properties", "latitude", "DECIMAL(10, 7) NULL AFTER location");
+  await addColumnIfMissing(connection, DB_NAME, "properties", "longitude", "DECIMAL(10, 7) NULL AFTER latitude");
 
   const [existingAdmins] = await connection.query(
     "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
