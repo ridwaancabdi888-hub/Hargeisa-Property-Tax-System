@@ -16,6 +16,8 @@ const sampleProperty: PropertyListing = {
   description: "A lovely villa",
   price: 250000,
   location: "Jigjiga Yar",
+  latitude: null,
+  longitude: null,
   type: "sale",
   status: "available",
   createdBy: 1,

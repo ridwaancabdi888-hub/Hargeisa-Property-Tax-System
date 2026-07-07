@@ -2,9 +2,14 @@ const propertyService = require("../services/propertyService");
 const PropertyImageModel = require("../models/PropertyImageModel");
 const NotificationModel = require("../models/NotificationModel");
 const { logActivity } = require("../services/activityLogService");
-const { toCsv, toExcelBuffer } = require("../services/exportService");
+const { toCsv, toExcelBuffer, toTaxBillPdfBuffer } = require("../services/exportService");
 const asyncHandler = require("../utils/asyncHandler");
 const { sendSuccess } = require("../utils/apiResponse");
+
+// Illustrative flat municipal property tax rate used for the "Generate Tax
+// Bill" feature. No real per-property tax assessment model exists in this
+// system, so bills are computed as a simple percentage of the listing price.
+const TAX_RATE = 0.01;
 
 function toPublicProperty(row) {
   return {
@@ -13,6 +18,8 @@ function toPublicProperty(row) {
     description: row.description,
     price: Number(row.price),
     location: row.location,
+    latitude: row.latitude !== null && row.latitude !== undefined ? Number(row.latitude) : null,
+    longitude: row.longitude !== null && row.longitude !== undefined ? Number(row.longitude) : null,
     type: row.type,
     status: row.status,
     createdBy: row.created_by,
@@ -24,6 +31,11 @@ function toPublicProperty(row) {
 const list = asyncHandler(async (req, res) => {
   const { items, meta } = await propertyService.listProperties(req.query);
   sendSuccess(res, { message: "Properties fetched successfully", data: items.map(toPublicProperty), meta });
+});
+
+const getCounts = asyncHandler(async (req, res) => {
+  const counts = await propertyService.getCounts();
+  sendSuccess(res, { message: "Property counts fetched successfully", data: counts });
 });
 
 const getOne = asyncHandler(async (req, res) => {
@@ -42,9 +54,9 @@ const getOne = asyncHandler(async (req, res) => {
 });
 
 const create = asyncHandler(async (req, res) => {
-  const { title, description, price, location, type, status } = req.body;
+  const { title, description, price, location, latitude, longitude, type, status } = req.body;
   const property = await propertyService.createProperty(
-    { title, description, price, location, type, status },
+    { title, description, price, location, latitude, longitude, type, status },
     req.user.id
   );
 
@@ -134,4 +146,24 @@ const exportExcel = asyncHandler(async (req, res) => {
   res.send(buffer);
 });
 
-module.exports = { list, getOne, create, update, remove, exportCsv, exportExcel };
+const generateTaxBill = asyncHandler(async (req, res) => {
+  const property = await propertyService.getProperty(req.params.id);
+  if (!property) {
+    return res.status(404).json({ success: false, message: "Property not found" });
+  }
+  const publicProperty = toPublicProperty(property);
+  const buffer = await toTaxBillPdfBuffer(publicProperty, TAX_RATE);
+
+  await logActivity(req, {
+    action: "tax_bill_generated",
+    entityType: "property",
+    entityId: property.id,
+    description: `Generated tax bill for "${property.title}"`,
+  });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="tax-bill-${property.id}-${Date.now()}.pdf"`);
+  res.send(buffer);
+});
+
+module.exports = { list, getCounts, getOne, create, update, remove, exportCsv, exportExcel, generateTaxBill };

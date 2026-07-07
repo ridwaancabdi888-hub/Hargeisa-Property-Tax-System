@@ -23,13 +23,15 @@ interface StagedFile {
 
 function initialValues(property?: PropertyDetail): PropertyFormValues {
   if (!property) {
-    return { title: "", description: "", price: "", location: "", type: "sale", status: "available" };
+    return { title: "", description: "", price: "", location: "", latitude: "", longitude: "", type: "sale", status: "available" };
   }
   return {
     title: property.title,
     description: property.description,
     price: String(property.price),
     location: property.location,
+    latitude: property.latitude === null ? "" : String(property.latitude),
+    longitude: property.longitude === null ? "" : String(property.longitude),
     type: property.type,
     status: property.status,
   };
@@ -42,6 +44,14 @@ function validate(values: PropertyFormValues): FormErrors {
   const price = Number(values.price);
   if (!values.price || Number.isNaN(price) || price <= 0) errors.price = "Price must be a number greater than 0";
   if (!values.location.trim()) errors.location = "Location is required";
+  if (values.latitude.trim() !== "") {
+    const lat = Number(values.latitude);
+    if (Number.isNaN(lat) || lat < -90 || lat > 90) errors.latitude = "Latitude must be between -90 and 90";
+  }
+  if (values.longitude.trim() !== "") {
+    const lng = Number(values.longitude);
+    if (Number.isNaN(lng) || lng < -180 || lng > 180) errors.longitude = "Longitude must be between -180 and 180";
+  }
   return errors;
 }
 
@@ -204,6 +214,43 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-navy-700 focus:outline-none focus:ring-1 focus:ring-navy-700"
               />
               {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="property-latitude" className="mb-1.5 block text-xs font-medium text-slate-600">
+                Latitude <span className="font-normal text-slate-400">(optional, for GIS Map)</span>
+              </label>
+              <input
+                id="property-latitude"
+                type="number"
+                step="any"
+                min="-90"
+                max="90"
+                placeholder="e.g. 9.5624"
+                value={values.latitude}
+                onChange={(e) => update("latitude", e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-navy-700 focus:outline-none focus:ring-1 focus:ring-navy-700"
+              />
+              {errors.latitude && <p className="mt-1 text-xs text-red-600">{errors.latitude}</p>}
+            </div>
+            <div>
+              <label htmlFor="property-longitude" className="mb-1.5 block text-xs font-medium text-slate-600">
+                Longitude <span className="font-normal text-slate-400">(optional, for GIS Map)</span>
+              </label>
+              <input
+                id="property-longitude"
+                type="number"
+                step="any"
+                min="-180"
+                max="180"
+                placeholder="e.g. 44.0770"
+                value={values.longitude}
+                onChange={(e) => update("longitude", e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-navy-700 focus:outline-none focus:ring-1 focus:ring-navy-700"
+              />
+              {errors.longitude && <p className="mt-1 text-xs text-red-600">{errors.longitude}</p>}
             </div>
           </div>
 

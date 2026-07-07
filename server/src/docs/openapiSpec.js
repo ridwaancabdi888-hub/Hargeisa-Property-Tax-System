@@ -39,6 +39,8 @@ const propertySchema = {
     description: { type: "string", example: "Spacious villa near the coast" },
     price: { type: "number", example: 250000 },
     location: { type: "string", example: "Jigjiga Yar" },
+    latitude: { type: "number", nullable: true, example: 9.5624 },
+    longitude: { type: "number", nullable: true, example: 44.077 },
     type: { type: "string", enum: ["rent", "sale"], example: "sale" },
     status: { type: "string", enum: ["available", "sold", "rented"], example: "available" },
     createdBy: { type: "integer", nullable: true, example: 1 },
@@ -249,6 +251,8 @@ module.exports = {
                   description: { type: "string", example: "Spacious villa near the coast" },
                   price: { type: "number", example: 250000 },
                   location: { type: "string", example: "Jigjiga Yar" },
+                  latitude: { type: "number", nullable: true, example: 9.5624 },
+                  longitude: { type: "number", nullable: true, example: 44.077 },
                   type: { type: "string", enum: ["rent", "sale"], example: "sale" },
                   status: { type: "string", enum: ["available", "sold", "rented"], example: "available" },
                 },
@@ -259,6 +263,34 @@ module.exports = {
         responses: {
           201: { description: "Created", content: { "application/json": { schema: successEnvelope(propertySchema) } } },
           403: { description: "Viewers cannot create properties", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+    },
+    "/property-listings/counts": {
+      get: {
+        tags: ["Properties"],
+        summary: "Aggregate property counts (total, by status, by type, assessed value) in a single query",
+        security: [cookieAuth],
+        responses: {
+          200: {
+            description: "Counts",
+            content: {
+              "application/json": {
+                schema: successEnvelope({
+                  type: "object",
+                  properties: {
+                    total: { type: "integer", example: 42 },
+                    available: { type: "integer", example: 20 },
+                    sold: { type: "integer", example: 12 },
+                    rented: { type: "integer", example: 10 },
+                    rent: { type: "integer", example: 18 },
+                    sale: { type: "integer", example: 24 },
+                    assessedValue: { type: "number", example: 4250000 },
+                  },
+                }),
+              },
+            },
+          },
         },
       },
     },
@@ -292,6 +324,18 @@ module.exports = {
         security: [cookieAuth],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
         responses: { 200: { description: "Deleted" }, 403: { description: "Only admins may delete", content: { "application/json": { schema: errorEnvelope } } } },
+      },
+    },
+    "/property-listings/{id}/tax-bill": {
+      get: {
+        tags: ["Properties"],
+        summary: "Generate a property tax bill as PDF (illustrative flat-rate assessment)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: { description: "PDF tax bill", content: { "application/pdf": {} } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
       },
     },
     "/property-listings/{id}/images": {

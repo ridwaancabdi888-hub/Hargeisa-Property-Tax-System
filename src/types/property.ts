@@ -7,6 +7,8 @@ export interface PropertyListing {
   description: string;
   price: number;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   type: ListingType;
   status: ListingStatus;
   createdBy: number | null;
@@ -36,8 +38,20 @@ export interface PropertyFormValues {
   description: string;
   price: string;
   location: string;
+  latitude: string;
+  longitude: string;
   type: ListingType;
   status: ListingStatus;
+}
+
+export interface PropertyCounts {
+  total: number;
+  available: number;
+  sold: number;
+  rented: number;
+  rent: number;
+  sale: number;
+  assessedValue: number;
 }
 
 export interface PropertyImage {

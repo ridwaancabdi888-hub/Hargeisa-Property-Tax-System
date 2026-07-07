@@ -64,6 +64,14 @@ async function main() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(255) NULL"
   );
 
+  // GIS map coordinates. Optional — only properties with both set are plotted.
+  await connection.query(
+    "ALTER TABLE properties ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7) NULL AFTER location"
+  );
+  await connection.query(
+    "ALTER TABLE properties ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7) NULL AFTER latitude"
+  );
+
   const [existingAdmins] = await connection.query(
     "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
   );

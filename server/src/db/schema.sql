@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS properties (
   description TEXT NOT NULL,
   price DECIMAL(12, 2) NOT NULL,
   location VARCHAR(150) NOT NULL,
+  latitude DECIMAL(10, 7) NULL,
+  longitude DECIMAL(10, 7) NULL,
   type ENUM('rent', 'sale') NOT NULL,
   status ENUM('available', 'sold', 'rented') NOT NULL DEFAULT 'available',
   created_by INT UNSIGNED NULL,

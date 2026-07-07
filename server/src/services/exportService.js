@@ -82,4 +82,49 @@ function toAnalyticsPdfBuffer(overview) {
   });
 }
 
-module.exports = { toCsv, toExcelBuffer, toAnalyticsPdfBuffer };
+function toTaxBillPdfBuffer(property, taxRate) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(chunks)));
+    doc.on("error", reject);
+
+    const taxAmount = property.price * taxRate;
+    const billNumber = `HMS-${property.id}-${new Date().getFullYear()}`;
+
+    doc.fontSize(18).text("Hargeisa Municipal Property Tax Bill", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(10).fillColor("#666666").text(`Bill No. ${billNumber}`, { align: "center" });
+    doc.text(`Issued ${new Date().toLocaleString()}`, { align: "center" });
+    doc.moveDown(1.5);
+    doc.fillColor("#000000");
+
+    doc.fontSize(14).text("Property Details");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    doc.text(`Property ID: ${property.id}`);
+    doc.text(`Title: ${property.title}`);
+    doc.text(`Location: ${property.location}`);
+    doc.text(`Listing Type: ${property.type === "sale" ? "Sale" : "Rent"}`);
+    doc.text(`Status: ${property.status}`);
+    doc.text(`Listing Price: $${Number(property.price).toLocaleString()}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).text("Tax Assessment");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    doc.text(`Tax Rate: ${(taxRate * 100).toFixed(1)}% of listing price`);
+    doc.text(`Tax Amount Due: $${taxAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(9).fillColor("#666666").text(
+      "This bill is generated using a flat illustrative municipal tax rate for demonstration purposes and does not reflect a formal property assessment.",
+      { align: "left" }
+    );
+
+    doc.end();
+  });
+}
+
+module.exports = { toCsv, toExcelBuffer, toAnalyticsPdfBuffer, toTaxBillPdfBuffer };

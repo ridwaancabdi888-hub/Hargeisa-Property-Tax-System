@@ -1,5 +1,6 @@
 import { apiFetch } from "./api";
 import type {
+  PropertyCounts,
   PropertyDetail,
   PropertyFormValues,
   PropertyListMeta,
@@ -10,6 +11,10 @@ import type {
 interface ListResponse {
   data: PropertyListing[];
   meta: PropertyListMeta;
+}
+
+interface CountsResponse {
+  data: PropertyCounts;
 }
 
 interface ItemResponse {
@@ -39,17 +44,30 @@ export function getProperty(id: number) {
   return apiFetch<DetailResponse>(`/property-listings/${id}`);
 }
 
+export function getPropertyCounts() {
+  return apiFetch<CountsResponse>("/property-listings/counts");
+}
+
+function toPayload(payload: PropertyFormValues) {
+  return {
+    ...payload,
+    price: Number(payload.price),
+    latitude: payload.latitude.trim() === "" ? null : Number(payload.latitude),
+    longitude: payload.longitude.trim() === "" ? null : Number(payload.longitude),
+  };
+}
+
 export function createProperty(payload: PropertyFormValues) {
   return apiFetch<ItemResponse>("/property-listings", {
     method: "POST",
-    body: JSON.stringify({ ...payload, price: Number(payload.price) }),
+    body: JSON.stringify(toPayload(payload)),
   });
 }
 
 export function updateProperty(id: number, payload: PropertyFormValues) {
   return apiFetch<ItemResponse>(`/property-listings/${id}`, {
     method: "PUT",
-    body: JSON.stringify({ ...payload, price: Number(payload.price) }),
+    body: JSON.stringify(toPayload(payload)),
   });
 }
 
@@ -63,4 +81,8 @@ export function getCsvExportUrl(params: PropertyListParams) {
 
 export function getExcelExportUrl(params: PropertyListParams) {
   return `/api/property-listings/export/excel${buildQueryString(params)}`;
+}
+
+export function getTaxBillUrl(id: number) {
+  return `/api/property-listings/${id}/tax-bill`;
 }

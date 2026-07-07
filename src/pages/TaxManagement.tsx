@@ -1,60 +1,153 @@
-import { DollarSign, CheckCircle2, Percent, Gavel, Filter, Receipt } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { DollarSign, Building2, Percent, CheckCircle2, Filter as FilterIcon, Receipt } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import StatCard from "../components/ui/StatCard";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import SearchInput from "../components/ui/SearchInput";
+import FilterSelect from "../components/ui/FilterSelect";
 import DataTable, { type Column } from "../components/ui/DataTable";
 import StatusBadge from "../components/ui/StatusBadge";
-import { taxRecords } from "../data/mockData";
-import type { TaxRecord } from "../types";
+import Pagination from "../components/ui/Pagination";
+import { TableSkeleton } from "../components/ui/Skeleton";
+import Skeleton from "../components/ui/Skeleton";
+import { getPropertyCounts, getTaxBillUrl, listProperties } from "../lib/propertiesApi";
+import type { PropertyListMeta, PropertyListing } from "../types/property";
+
+// Illustrative flat municipal tax rate, matching TAX_RATE in
+// server/src/controllers/propertyController.js. Used here only to preview
+// the amount that will appear on the generated bill.
+const TAX_RATE = 0.01;
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-
-const columns: Column<TaxRecord>[] = [
-  { header: "Property ID", render: (r) => <span className="font-medium text-slate-900">{r.propertyId}</span> },
-  { header: "Owner Name", render: (r) => r.owner },
-  { header: "Due Date", render: (r) => r.dueDate },
-  { header: "Tax Amount", align: "right", render: (r) => currency(r.amount) },
-  { header: "Status", render: (r) => <StatusBadge status={r.status} /> },
-  {
-    header: "Actions",
-    align: "right",
-    render: () => (
-      <button className="text-xs font-medium text-navy-700 hover:underline">View</button>
-    ),
-  },
-];
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const statusOptions = ["All Statuses", "available", "sold", "rented"];
+const typeOptions = ["All Types", "rent", "sale"];
+const statusTone = { available: "green", rented: "amber", sold: "slate" } as const;
 
 export default function TaxManagement() {
-  const totalOutstanding = taxRecords
-    .filter((r) => r.status !== "Paid")
-    .reduce((sum, r) => sum + r.amount, 0);
-  const totalPaid = taxRecords.filter((r) => r.status === "Paid").reduce((sum, r) => sum + r.amount, 0);
-  const complianceRate = Math.round((taxRecords.filter((r) => r.status === "Paid").length / taxRecords.length) * 100);
+  const [properties, setProperties] = useState<PropertyListing[]>([]);
+  const [meta, setMeta] = useState<PropertyListMeta>({ total: 0, totalPages: 1, currentPage: 1, limit: 10 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("All Statuses");
+  const [type, setType] = useState("All Types");
+  const [page, setPage] = useState(1);
+
+  const [totals, setTotals] = useState<{ total: number; assessedValue: number; sold: number } | null>(null);
+
+  const fetchProperties = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await listProperties({
+        page,
+        limit: 10,
+        search: search || undefined,
+        status: status === "All Statuses" ? undefined : (status as PropertyListing["status"]),
+        type: type === "All Types" ? undefined : (type as PropertyListing["type"]),
+      });
+      setProperties(res.data);
+      setMeta(res.meta);
+    } catch {
+      setError("Failed to load properties. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, search, status, type]);
+
+  useEffect(() => {
+    const timeout = setTimeout(fetchProperties, 300);
+    return () => clearTimeout(timeout);
+  }, [fetchProperties]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, status, type]);
+
+  useEffect(() => {
+    getPropertyCounts().then((res) => {
+      setTotals({ total: res.data.total, assessedValue: res.data.assessedValue, sold: res.data.sold });
+    });
+  }, [properties]);
+
+  const columns: Column<PropertyListing>[] = [
+    { header: "Property", render: (r) => <span className="font-medium text-slate-900">{r.title}</span> },
+    { header: "Location", render: (r) => r.location },
+    { header: "Listing Price", align: "right", render: (r) => currency(r.price) },
+    { header: "Est. Tax", align: "right", render: (r) => currency(r.price * TAX_RATE) },
+    { header: "Status", render: (r) => <StatusBadge status={capitalize(r.status)} tone={statusTone[r.status]} /> },
+    {
+      header: "Actions",
+      align: "right",
+      render: (r) => (
+        <a href={getTaxBillUrl(r.id)} className="inline-flex items-center gap-1.5 text-xs font-medium text-navy-700 hover:underline">
+          <Receipt size={13} /> Generate Bill
+        </a>
+      ),
+    },
+  ];
 
   return (
     <div>
       <PageHeader
         title="Tax Management"
-        subtitle="Comprehensive tax processing tools and compliance overview"
+        subtitle="Illustrative municipal property tax assessment and bill generation"
         action={
-          <div className="flex gap-2">
-            <Button variant="secondary" icon={<Filter size={15} />}>Filter</Button>
-            <Button icon={<Receipt size={15} />}>Generate Tax Bill</Button>
-          </div>
+          <Button variant="secondary" icon={<FilterIcon size={15} />} onClick={() => setShowFilters((v) => !v)}>
+            Filter
+          </Button>
         }
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Outstanding" value={currency(totalOutstanding)} icon={DollarSign} />
-        <StatCard label="Amount Paid YTD" value={currency(totalPaid)} icon={CheckCircle2} />
-        <StatCard label="Compliance Rate" value={`${complianceRate}%`} icon={Percent} />
-        <StatCard label="Pending Appeals" value="142" icon={Gavel} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {totals ? (
+          <>
+            <StatCard label="Total Properties" value={String(totals.total)} icon={Building2} />
+            <StatCard label="Total Assessed Value" value={currency(totals.assessedValue)} icon={DollarSign} />
+            <StatCard label="Estimated Tax Levied" value={currency(totals.assessedValue * TAX_RATE)} icon={Percent} />
+          </>
+        ) : (
+          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24" />)
+        )}
       </div>
 
-      <Card title="Payment History" subtitle="Recent and upcoming tax obligations" className="mt-6">
-        <DataTable columns={columns} rows={taxRecords} rowKey={(r) => r.id} />
+      <Card
+        title="Property Tax Roll"
+        subtitle={`Generate a per-property tax bill at a flat illustrative rate of ${(TAX_RATE * 100).toFixed(1)}%`}
+        className="mt-6"
+      >
+        {showFilters && (
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <SearchInput placeholder="Search by title or location..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <FilterSelect className="capitalize" options={statusOptions} value={status} onChange={(e) => setStatus(e.target.value)} />
+            <FilterSelect className="capitalize" options={typeOptions} value={type} onChange={(e) => setType(e.target.value)} />
+          </div>
+        )}
+
+        {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{error}</div>}
+
+        {isLoading ? (
+          <TableSkeleton rows={6} columns={6} />
+        ) : properties.length === 0 ? (
+          <p className="py-8 text-center text-sm text-slate-500">No properties match your search or filters.</p>
+        ) : (
+          <DataTable columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
+        )}
+
+        <div className="mt-4">
+          <Pagination meta={meta} onPageChange={setPage} />
+        </div>
       </Card>
+
+      {totals && totals.sold > 0 && (
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
+          <CheckCircle2 size={13} className="text-emerald-600" /> {totals.sold} propert{totals.sold === 1 ? "y" : "ies"} marked sold this period.
+        </p>
+      )}
     </div>
   );
 }

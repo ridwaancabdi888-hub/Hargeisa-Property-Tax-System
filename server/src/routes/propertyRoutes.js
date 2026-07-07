@@ -29,6 +29,14 @@ const propertyBodyValidators = [
   body("description").trim().notEmpty().withMessage("Description is required"),
   body("price").isFloat({ gt: 0 }).withMessage("Price is required and must be a number greater than 0"),
   body("location").trim().notEmpty().withMessage("Location is required"),
+  body("latitude")
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: -90, max: 90 })
+    .withMessage("latitude must be between -90 and 90"),
+  body("longitude")
+    .optional({ nullable: true, checkFalsy: true })
+    .isFloat({ min: -180, max: 180 })
+    .withMessage("longitude must be between -180 and 180"),
   body("type").isIn(["rent", "sale"]).withMessage("Type must be 'rent' or 'sale'"),
   body("status")
     .optional()
@@ -40,7 +48,9 @@ router.get("/", listQueryValidators, validate, propertyController.list);
 // Must be registered before "/:id" so "export" isn't matched as an :id value.
 router.get("/export/csv", listQueryValidators, validate, propertyController.exportCsv);
 router.get("/export/excel", listQueryValidators, validate, propertyController.exportExcel);
+router.get("/counts", propertyController.getCounts);
 router.get("/:id", idParam, validate, propertyController.getOne);
+router.get("/:id/tax-bill", idParam, validate, propertyController.generateTaxBill);
 router.post("/", requireRole("admin", "agent"), propertyBodyValidators, validate, propertyController.create);
 router.put(
   "/:id",

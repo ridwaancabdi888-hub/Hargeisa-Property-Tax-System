@@ -1,6 +1,6 @@
 const PropertyModel = require("../models/PropertyModel");
 
-const ALLOWED_UPDATE_FIELDS = ["title", "description", "price", "location", "type", "status"];
+const ALLOWED_UPDATE_FIELDS = ["title", "description", "price", "location", "latitude", "longitude", "type", "status"];
 
 function buildFilters(query) {
   const clauses = [];
@@ -62,6 +62,14 @@ async function listAllForExport(query) {
   return PropertyModel.list({ whereSql, params, limit: 10000, offset: 0 });
 }
 
+// Single-query aggregate counts (total/by-status/by-type/assessed value),
+// accessible to every authenticated role — unlike /api/analytics which is
+// admin-only. Used by dashboard-style pages so they don't need to fire one
+// request per count.
+async function getCounts() {
+  return PropertyModel.getCounts();
+}
+
 function createProperty(payload, createdBy) {
   return PropertyModel.create({ ...payload, createdBy });
 }
@@ -77,6 +85,7 @@ function updateProperty(id, payload) {
 module.exports = {
   listProperties,
   listAllForExport,
+  getCounts,
   createProperty,
   updateProperty,
   getProperty: PropertyModel.findById,
