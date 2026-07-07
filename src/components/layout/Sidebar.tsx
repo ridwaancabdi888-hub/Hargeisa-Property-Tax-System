@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
   ScrollText,
   DatabaseBackup,
+  Users,
   LogOut,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -24,6 +25,7 @@ const navItems: { to: string; label: string; icon: typeof LayoutDashboard; roles
   { to: "/gis-map", label: "GIS Map", icon: Map },
   { to: "/reports", label: "Reports", icon: FileBarChart },
   { to: "/activity-log", label: "Activity Log", icon: ScrollText, roles: ["admin"] },
+  { to: "/user-management", label: "User Management", icon: Users, roles: ["admin"] },
   { to: "/backups", label: "Backups", icon: DatabaseBackup, roles: ["admin"] },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ];

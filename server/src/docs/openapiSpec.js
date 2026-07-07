@@ -18,6 +18,22 @@ const errorEnvelope = {
 
 const cookieAuth = { cookieAuth: [] };
 
+const adminUserSchema = {
+  type: "object",
+  properties: {
+    id: { type: "integer", example: 2 },
+    fullName: { type: "string", example: "Jane Agent" },
+    username: { type: "string", example: "jane_agent" },
+    email: { type: "string", example: "jane@hargeisatax.gov.so" },
+    role: { type: "string", enum: ["admin", "agent", "viewer"], example: "agent" },
+    isActive: { type: "boolean", example: true },
+    createdBy: { type: "integer", nullable: true, example: 1 },
+    avatarUrl: { type: "string", nullable: true, example: null },
+    createdAt: { type: "string", example: "2026-01-01 12:00:00" },
+    updatedAt: { type: "string", example: "2026-01-01 12:00:00" },
+  },
+};
+
 const userSchema = {
   type: "object",
   properties: {
@@ -185,6 +201,23 @@ module.exports = {
       },
     },
     "/users": {
+      get: {
+        tags: ["Users"],
+        summary: "List users, search by name/username/email, filter by role (admin only)",
+        security: [cookieAuth],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 10, maximum: 100 } },
+          { name: "search", in: "query", schema: { type: "string" } },
+          { name: "role", in: "query", schema: { type: "string", enum: ["admin", "agent", "viewer"] } },
+        ],
+        responses: {
+          200: {
+            description: "Paginated user list",
+            content: { "application/json": { schema: successEnvelope({ type: "array", items: adminUserSchema }, paginationMeta) } },
+          },
+        },
+      },
       post: {
         tags: ["Users"],
         summary: "Create an agent/viewer account (admin only)",
@@ -211,6 +244,44 @@ module.exports = {
           201: { description: "Account created", content: { "application/json": { schema: successEnvelope(userSchema) } } },
           403: { description: "Only admins may create accounts", content: { "application/json": { schema: errorEnvelope } } },
           409: { description: "Username or email already in use", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+    },
+    "/users/{id}/status": {
+      patch: {
+        tags: ["Users"],
+        summary: "Activate or deactivate an agent/viewer account (admin only)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", required: ["isActive"], properties: { isActive: { type: "boolean" } } } } },
+        },
+        responses: {
+          200: { description: "Updated", content: { "application/json": { schema: successEnvelope(adminUserSchema) } } },
+          400: { description: "Cannot target an admin account or your own account", content: { "application/json": { schema: errorEnvelope } } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+    },
+    "/users/{id}/role": {
+      patch: {
+        tags: ["Users"],
+        summary: "Change an agent/viewer account's role (admin only)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", required: ["role"], properties: { role: { type: "string", enum: ["agent", "viewer"] } } },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Updated", content: { "application/json": { schema: successEnvelope(adminUserSchema) } } },
+          400: { description: "Cannot target an admin account or your own account", content: { "application/json": { schema: errorEnvelope } } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
         },
       },
     },

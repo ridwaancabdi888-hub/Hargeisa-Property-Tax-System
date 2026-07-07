@@ -17,6 +17,21 @@ const statusOptions = ["All Statuses", "available", "sold", "rented"];
 
 const HARGEISA_CENTER: [number, number] = [9.5624, 44.077];
 
+// Deterministic pseudo-random offset (±~0.03°, roughly ±3km) so a property
+// without real coordinates still gets a stable, distinct pin near Hargeisa
+// instead of disappearing from the map entirely.
+function approximateLocation(id: number): [number, number] {
+  const angle = (id * 137.508) % 360; // golden-angle spread, avoids clustering
+  const radius = 0.005 + ((id * 9301 + 49297) % 233280) / 233280 / 40;
+  const rad = (angle * Math.PI) / 180;
+  return [HARGEISA_CENTER[0] + radius * Math.cos(rad), HARGEISA_CENTER[1] + radius * Math.sin(rad)];
+}
+
+interface MappedProperty extends PropertyListing {
+  mapPosition: [number, number];
+  isApproximate: boolean;
+}
+
 export default function GISMap() {
   const [properties, setProperties] = useState<PropertyListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +48,15 @@ export default function GISMap() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const mappable = useMemo(() => properties.filter((p) => p.latitude !== null && p.longitude !== null), [properties]);
+  const mappable: MappedProperty[] = useMemo(
+    () =>
+      properties.map((p) => ({
+        ...p,
+        mapPosition: p.latitude !== null && p.longitude !== null ? [p.latitude, p.longitude] : approximateLocation(p.id),
+        isApproximate: p.latitude === null || p.longitude === null,
+      })),
+    [properties]
+  );
 
   const filtered = useMemo(() => {
     return mappable.filter((p) => {
@@ -78,8 +101,8 @@ export default function GISMap() {
             {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
             <p className="mt-3 text-xs text-slate-500">
               Showing {filtered.length} of {properties.length} properties
-              {mappable.length < properties.length && (
-                <> &middot; {properties.length - mappable.length} without coordinates are not shown</>
+              {mappable.some((p) => p.isApproximate) && (
+                <> &middot; pins with a dashed ring are approximate (no exact coordinates set yet)</>
               )}
             </p>
           </div>
@@ -97,13 +120,14 @@ export default function GISMap() {
               {filtered.map((p) => (
                 <CircleMarker
                   key={p.id}
-                  center={[p.latitude as number, p.longitude as number]}
+                  center={p.mapPosition}
                   radius={9}
                   pathOptions={{
                     color: "#fff",
                     weight: 2,
                     fillColor: statusColors[p.status],
-                    fillOpacity: 0.9,
+                    fillOpacity: p.isApproximate ? 0.55 : 0.9,
+                    dashArray: p.isApproximate ? "3,2" : undefined,
                   }}
                 >
                   <Popup>
@@ -114,6 +138,7 @@ export default function GISMap() {
                         {p.type === "sale" ? "Sale" : "Rent"} &middot; {p.status}
                       </p>
                       <p className="mt-1 font-medium">${p.price.toLocaleString()}</p>
+                      {p.isApproximate && <p className="mt-1 text-amber-600">Approximate location — no exact coordinates set</p>}
                     </div>
                   </Popup>
                 </CircleMarker>

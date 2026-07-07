@@ -61,6 +61,49 @@ async function updateAvatar(id, avatarUrl) {
   return findById(id);
 }
 
+function buildFilters(query) {
+  const clauses = [];
+  const params = [];
+
+  if (query.search) {
+    clauses.push("(full_name LIKE ? OR username LIKE ? OR email LIKE ?)");
+    const term = `%${query.search}%`;
+    params.push(term, term, term);
+  }
+  if (query.role) {
+    clauses.push("role = ?");
+    params.push(query.role);
+  }
+
+  const whereSql = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
+  return { whereSql, params };
+}
+
+async function list({ query, limit, offset }) {
+  const { whereSql, params } = buildFilters(query);
+  const [rows] = await pool.query(
+    `SELECT ${PUBLIC_FIELDS} FROM users ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    [...params, limit, offset]
+  );
+  return rows;
+}
+
+async function count(query) {
+  const { whereSql, params } = buildFilters(query);
+  const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM users ${whereSql}`, params);
+  return total;
+}
+
+async function setActive(id, isActive) {
+  await pool.query("UPDATE users SET is_active = ? WHERE id = ?", [isActive, id]);
+  return findById(id);
+}
+
+async function updateRole(id, role) {
+  await pool.query("UPDATE users SET role = ? WHERE id = ?", [role, id]);
+  return findById(id);
+}
+
 module.exports = {
   findByUsername,
   findByEmail,
@@ -70,4 +113,8 @@ module.exports = {
   updateProfile,
   updatePassword,
   updateAvatar,
+  list,
+  count,
+  setActive,
+  updateRole,
 };

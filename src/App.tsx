@@ -7,6 +7,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import ActivityLog from "./pages/ActivityLog";
 import Backups from "./pages/Backups";
+import UserManagement from "./pages/UserManagement";
 import RegionalOverview from "./pages/RegionalOverview";
 import PropertyInventory from "./pages/PropertyInventory";
 import PropertyListings from "./pages/PropertyListings";
@@ -36,6 +37,7 @@ function App() {
             <Route path="/property-analytics" element={<PropertyAnalytics />} />
             <Route path="/activity-log" element={<ActivityLog />} />
             <Route path="/backups" element={<Backups />} />
+            <Route path="/user-management" element={<UserManagement />} />
           </Route>
         </Route>
       </Route>
