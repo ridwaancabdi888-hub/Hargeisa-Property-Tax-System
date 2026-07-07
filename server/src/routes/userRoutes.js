@@ -40,6 +40,20 @@ router.patch(
   userController.updateRole
 );
 
+router.patch(
+  "/:id/password",
+  [
+    param("id").isInt({ min: 1 }).withMessage("Invalid user id"),
+    body("newPassword")
+      .isLength({ min: 8 })
+      .bail()
+      .matches(STRONG_PASSWORD_REGEX)
+      .withMessage(STRONG_PASSWORD_MESSAGE),
+  ],
+  validate,
+  userController.resetPassword
+);
+
 router.post(
   "/",
   [

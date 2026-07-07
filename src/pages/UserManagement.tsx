@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, UserCheck, UserX } from "lucide-react";
+import { KeyRound, Plus, UserCheck, UserX } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import Card from "../components/ui/Card";
 import SearchInput from "../components/ui/SearchInput";
@@ -11,7 +11,8 @@ import Pagination from "../components/ui/Pagination";
 import ConfirmModal from "../components/ui/ConfirmModal";
 import { TableSkeleton } from "../components/ui/Skeleton";
 import CreateUserModal from "../components/users/CreateUserModal";
-import { createUser, listUsers, updateUserRole, updateUserStatus } from "../lib/usersApi";
+import ResetPasswordModal from "../components/users/ResetPasswordModal";
+import { createUser, listUsers, resetUserPassword, updateUserRole, updateUserStatus } from "../lib/usersApi";
 import { useTranslation } from "../lib/i18n/useTranslation";
 import type { CreateUserValues, ManagedUser, UserListMeta } from "../types/user";
 import { useAuth } from "../context/AuthContext";
@@ -37,6 +38,7 @@ export default function UserManagement() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [deactivating, setDeactivating] = useState<ManagedUser | null>(null);
+  const [resettingPasswordFor, setResettingPasswordFor] = useState<ManagedUser | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchUsers = useCallback(async () => {
@@ -109,6 +111,12 @@ export default function UserManagement() {
     }
   }
 
+  async function handleResetPassword(newPassword: string) {
+    if (!resettingPasswordFor) return;
+    await resetUserPassword(resettingPasswordFor.id, newPassword);
+    showToast(`Password reset for ${resettingPasswordFor.username}`);
+  }
+
   const columns: Column<ManagedUser>[] = [
     { header: t.pages.userManagement.fullName, render: (r) => <span className="font-medium text-slate-900">{r.fullName}</span> },
     { header: t.pages.userManagement.username, render: (r) => r.username },
@@ -139,20 +147,30 @@ export default function UserManagement() {
         if (r.role === "admin" || r.id === currentUser?.id) {
           return <span className="text-xs text-slate-400">—</span>;
         }
-        return r.isActive ? (
-          <button
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
-            onClick={() => setDeactivating(r)}
-          >
-            <UserX size={13} /> {t.pages.userManagement.deactivate}
-          </button>
-        ) : (
-          <button
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:underline"
-            onClick={() => handleActivate(r)}
-          >
-            <UserCheck size={13} /> {t.pages.userManagement.activate}
-          </button>
+        return (
+          <div className="flex items-center justify-end gap-3">
+            <button
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-navy-700 hover:underline"
+              onClick={() => setResettingPasswordFor(r)}
+            >
+              <KeyRound size={13} /> Reset Password
+            </button>
+            {r.isActive ? (
+              <button
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-red-600 hover:underline"
+                onClick={() => setDeactivating(r)}
+              >
+                <UserX size={13} /> {t.pages.userManagement.deactivate}
+              </button>
+            ) : (
+              <button
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:underline"
+                onClick={() => handleActivate(r)}
+              >
+                <UserCheck size={13} /> {t.pages.userManagement.activate}
+              </button>
+            )}
+          </div>
         );
       },
     },
@@ -201,6 +219,14 @@ export default function UserManagement() {
           isSubmitting={isSubmitting}
           onConfirm={handleConfirmDeactivate}
           onCancel={() => setDeactivating(null)}
+        />
+      )}
+
+      {resettingPasswordFor && (
+        <ResetPasswordModal
+          username={resettingPasswordFor.username}
+          onSubmit={handleResetPassword}
+          onClose={() => setResettingPasswordFor(null)}
         />
       )}
     </div>

@@ -13,6 +13,7 @@ router.post(
   [
     body("username").trim().notEmpty().withMessage("Username is required"),
     body("password").notEmpty().withMessage("Password is required"),
+    body("rememberMe").optional().isBoolean().withMessage("rememberMe must be a boolean"),
   ],
   validate,
   authController.login

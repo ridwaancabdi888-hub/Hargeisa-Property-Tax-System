@@ -85,6 +85,31 @@ const updateRole = asyncHandler(async (req, res) => {
   sendSuccess(res, { message: "User role updated successfully", data: toAdminUser(updated) });
 });
 
+const resetPassword = asyncHandler(async (req, res) => {
+  const target = await UserModel.findById(req.params.id);
+  if (!target) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+  if (target.role === "admin") {
+    return res.status(400).json({ success: false, message: "Admin passwords cannot be reset here" });
+  }
+  if (Number(req.params.id) === req.user.id) {
+    return res.status(400).json({ success: false, message: "Use your Profile page to change your own password" });
+  }
+
+  const passwordHash = await bcrypt.hash(req.body.newPassword, 12);
+  await UserModel.updatePassword(req.params.id, passwordHash);
+
+  await logActivity(req, {
+    action: "user_password_reset",
+    entityType: "user",
+    entityId: target.id,
+    description: `Reset password for account "${target.username}"`,
+  });
+
+  sendSuccess(res, { message: "Password reset successfully" });
+});
+
 const createUser = asyncHandler(async (req, res) => {
   const { fullName, username, email, password, role } = req.body;
 
@@ -116,4 +141,4 @@ const createUser = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, user: toPublicUser(user) });
 });
 
-module.exports = { createUser, list, updateStatus, updateRole };
+module.exports = { createUser, list, updateStatus, updateRole, resetPassword };

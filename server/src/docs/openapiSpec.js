@@ -169,7 +169,11 @@ module.exports = {
               schema: {
                 type: "object",
                 required: ["username", "password"],
-                properties: { username: { type: "string", example: "admin" }, password: { type: "string", example: "Admin@12345" } },
+                properties: {
+                  username: { type: "string", example: "admin" },
+                  password: { type: "string", example: "Admin@12345" },
+                  rememberMe: { type: "boolean", example: false, description: "Extends the session cookie/JWT from 8h to 30 days." },
+                },
               },
             },
           },
@@ -280,6 +284,27 @@ module.exports = {
         },
         responses: {
           200: { description: "Updated", content: { "application/json": { schema: successEnvelope(adminUserSchema) } } },
+          400: { description: "Cannot target an admin account or your own account", content: { "application/json": { schema: errorEnvelope } } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+    },
+    "/users/{id}/password": {
+      patch: {
+        tags: ["Users"],
+        summary: "Admin-reset an agent/viewer account's password (admin only)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", required: ["newPassword"], properties: { newPassword: { type: "string", example: "NewStrongPass1" } } },
+            },
+          },
+        },
+        responses: {
+          200: { description: "Password reset", content: { "application/json": { schema: successEnvelope(null) } } },
           400: { description: "Cannot target an admin account or your own account", content: { "application/json": { schema: errorEnvelope } } },
           404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
         },

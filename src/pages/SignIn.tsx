@@ -14,13 +14,15 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLit, setIsLit] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotHint, setShowForgotHint] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(username, password);
+      await login(username, password, rememberMe);
       const from = (location.state as { from?: Location } | null)?.from?.pathname ?? "/dashboard";
       navigate(from, { replace: true });
     } catch (err) {
@@ -89,9 +91,13 @@ export default function SignIn() {
                   <label htmlFor="password" className="block text-xs font-medium text-navy-500">
                     Password
                   </label>
-                  <a href="#" className="text-xs font-medium text-navy-500 hover:text-white hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotHint((v) => !v)}
+                    className="text-xs font-medium text-navy-500 hover:text-white hover:underline"
+                  >
                     Forgot password?
-                  </a>
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -111,10 +117,20 @@ export default function SignIn() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {showForgotHint && (
+                  <p className="mt-1.5 text-xs text-navy-500">
+                    Passwords are reset by an administrator. Contact your system administrator to have yours reset.
+                  </p>
+                )}
               </div>
 
               <label className="flex items-center gap-2 text-xs text-navy-500">
-                <input type="checkbox" className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-navy-600 focus:ring-navy-500" />
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 text-navy-600 focus:ring-navy-500"
+                />
                 Remember this device
               </label>
 

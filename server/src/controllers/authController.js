@@ -16,18 +16,21 @@ function toPublicUser(user) {
   };
 }
 
-function cookieOptions() {
+const DEFAULT_SESSION_MS = 8 * 60 * 60 * 1000; // 8h — matches JWT_EXPIRES_IN default
+const REMEMBERED_SESSION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+function cookieOptions(maxAge = DEFAULT_SESSION_MS) {
   return {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    maxAge: 8 * 60 * 60 * 1000,
+    maxAge,
     path: "/",
   };
 }
 
 const login = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, rememberMe } = req.body;
 
   const user = await UserModel.findByUsername(username);
   if (!user || !user.is_active) {
@@ -39,8 +42,9 @@ const login = asyncHandler(async (req, res) => {
     return res.status(401).json({ success: false, message: "Invalid username or password" });
   }
 
-  const token = signToken({ sub: user.id, role: user.role });
-  res.cookie(process.env.COOKIE_NAME, token, cookieOptions());
+  const maxAge = rememberMe ? REMEMBERED_SESSION_MS : DEFAULT_SESSION_MS;
+  const token = signToken({ sub: user.id, role: user.role }, rememberMe ? "30d" : undefined);
+  res.cookie(process.env.COOKIE_NAME, token, cookieOptions(maxAge));
 
   await logActivity({ user: { id: user.id }, ip: req.ip }, {
     action: "login",

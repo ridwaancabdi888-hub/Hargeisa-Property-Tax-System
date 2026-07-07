@@ -46,3 +46,10 @@ export function updateUserRole(id: number, role: "agent" | "viewer") {
     body: JSON.stringify({ role }),
   });
 }
+
+export function resetUserPassword(id: number, newPassword: string) {
+  return apiFetch(`/users/${id}/password`, {
+    method: "PATCH",
+    body: JSON.stringify({ newPassword }),
+  });
+}
