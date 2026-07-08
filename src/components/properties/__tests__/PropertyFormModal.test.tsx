@@ -10,6 +10,10 @@ vi.mock("../../../lib/propertyImagesApi", () => ({
   deletePropertyImage: vi.fn(),
 }));
 
+vi.mock("../../../lib/clientsApi", () => ({
+  listClients: vi.fn().mockResolvedValue({ data: [], meta: { total: 0, totalPages: 1, currentPage: 1, limit: 100 } }),
+}));
+
 const sampleProperty: PropertyListing = {
   id: 1,
   title: "Sunset Villa",
@@ -18,6 +22,10 @@ const sampleProperty: PropertyListing = {
   location: "Jigjiga Yar",
   latitude: null,
   longitude: null,
+  clientId: null,
+  clientName: null,
+  clientPhone: null,
+  clientEmail: null,
   type: "sale",
   status: "available",
   createdBy: 1,

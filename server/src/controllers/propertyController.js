@@ -22,6 +22,10 @@ function toPublicProperty(row) {
     longitude: row.longitude !== null && row.longitude !== undefined ? Number(row.longitude) : null,
     type: row.type,
     status: row.status,
+    clientId: row.client_id ?? null,
+    clientName: row.client_name ?? null,
+    clientPhone: row.client_phone ?? null,
+    clientEmail: row.client_email ?? null,
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -54,9 +58,9 @@ const getOne = asyncHandler(async (req, res) => {
 });
 
 const create = asyncHandler(async (req, res) => {
-  const { title, description, price, location, latitude, longitude, type, status } = req.body;
+  const { title, description, price, location, latitude, longitude, clientId, type, status } = req.body;
   const property = await propertyService.createProperty(
-    { title, description, price, location, latitude, longitude, type, status },
+    { title, description, price, location, latitude, longitude, clientId, type, status },
     req.user.id
   );
 

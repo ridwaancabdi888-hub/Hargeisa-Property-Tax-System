@@ -13,7 +13,7 @@ describe("Property exports", () => {
     const res = await adminAgent.get("/api/property-listings/export/csv");
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("text/csv");
-    expect(res.text.split("\n")[0]).toBe("ID,Title,Description,Price,Location,Type,Status,Created At");
+    expect(res.text.split("\n")[0]).toBe("ID,Title,Description,Price,Location,Owner,Type,Status,Created At");
   });
 
   test("Excel export returns a valid XLSX file", async () => {

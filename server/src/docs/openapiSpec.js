@@ -59,6 +59,25 @@ const propertySchema = {
     longitude: { type: "number", nullable: true, example: 44.077 },
     type: { type: "string", enum: ["rent", "sale"], example: "sale" },
     status: { type: "string", enum: ["available", "sold", "rented"], example: "available" },
+    clientId: { type: "integer", nullable: true, example: 3, description: "Owner/seller — see /clients" },
+    clientName: { type: "string", nullable: true, example: "Jane Owner" },
+    clientPhone: { type: "string", nullable: true, example: "+252634000000" },
+    clientEmail: { type: "string", nullable: true, example: "jane@example.com" },
+    createdBy: { type: "integer", nullable: true, example: 1 },
+    createdAt: { type: "string", example: "2026-01-01 12:00:00" },
+    updatedAt: { type: "string", example: "2026-01-01 12:00:00" },
+  },
+};
+
+const clientSchema = {
+  type: "object",
+  properties: {
+    id: { type: "integer", example: 3 },
+    fullName: { type: "string", example: "Jane Owner" },
+    phone: { type: "string", nullable: true, example: "+252634000000" },
+    email: { type: "string", nullable: true, example: "jane@example.com" },
+    address: { type: "string", nullable: true, example: "Jigjiga Yar, Hargeisa" },
+    notes: { type: "string", nullable: true, example: "Prefers phone contact" },
     createdBy: { type: "integer", nullable: true, example: 1 },
     createdAt: { type: "string", example: "2026-01-01 12:00:00" },
     updatedAt: { type: "string", example: "2026-01-01 12:00:00" },
@@ -149,6 +168,7 @@ module.exports = {
     { name: "Authentication" },
     { name: "Users" },
     { name: "Properties" },
+    { name: "Clients" },
     { name: "Analytics" },
     { name: "Notifications" },
     { name: "Profile" },
@@ -322,6 +342,7 @@ module.exports = {
           { name: "status", in: "query", schema: { type: "string", enum: ["available", "sold", "rented"] } },
           { name: "min_price", in: "query", schema: { type: "number" } },
           { name: "max_price", in: "query", schema: { type: "number" } },
+          { name: "client_id", in: "query", schema: { type: "integer" }, description: "Filter by owning client id" },
         ],
         responses: {
           200: {
@@ -348,6 +369,7 @@ module.exports = {
                   location: { type: "string", example: "Jigjiga Yar" },
                   latitude: { type: "number", nullable: true, example: 9.5624 },
                   longitude: { type: "number", nullable: true, example: 44.077 },
+                  clientId: { type: "integer", nullable: true, example: 3, description: "Owning client id" },
                   type: { type: "string", enum: ["rent", "sale"], example: "sale" },
                   status: { type: "string", enum: ["available", "sold", "rented"], example: "available" },
                 },
@@ -448,6 +470,87 @@ module.exports = {
     },
     "/property-listings/{id}/images/{imageId}": {
       delete: { tags: ["Properties"], summary: "Delete a property image", security: [cookieAuth], parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }, { name: "imageId", in: "path", required: true, schema: { type: "integer" } }], responses: { 200: { description: "Deleted" } } },
+    },
+    "/clients": {
+      get: {
+        tags: ["Clients"],
+        summary: "List clients/owners (search, paginate)",
+        security: [cookieAuth],
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer", default: 1 } },
+          { name: "limit", in: "query", schema: { type: "integer", default: 10, maximum: 100 } },
+          { name: "search", in: "query", schema: { type: "string" }, description: "Partial, case-insensitive match on full name/phone/email" },
+        ],
+        responses: {
+          200: {
+            description: "Paginated client list",
+            content: { "application/json": { schema: successEnvelope({ type: "array", items: clientSchema }, paginationMeta) } },
+          },
+        },
+      },
+      post: {
+        tags: ["Clients"],
+        summary: "Create a client/owner (admin/agent)",
+        security: [cookieAuth],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["fullName"],
+                properties: {
+                  fullName: { type: "string", example: "Jane Owner" },
+                  phone: { type: "string", nullable: true, example: "+252634000000" },
+                  email: { type: "string", nullable: true, example: "jane@example.com" },
+                  address: { type: "string", nullable: true, example: "Jigjiga Yar, Hargeisa" },
+                  notes: { type: "string", nullable: true, example: "Prefers phone contact" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: "Created", content: { "application/json": { schema: successEnvelope(clientSchema) } } },
+          403: { description: "Viewers cannot create clients", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+    },
+    "/clients/{id}": {
+      get: {
+        tags: ["Clients"],
+        summary: "Get a client by id (includes linked property count)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: {
+            description: "Client with property count",
+            content: { "application/json": { schema: successEnvelope({ allOf: [clientSchema, { type: "object", properties: { propertyCount: { type: "integer", example: 2 } } }] }) } },
+          },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+      put: {
+        tags: ["Clients"],
+        summary: "Update a client (admin/agent)",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: { description: "Updated", content: { "application/json": { schema: successEnvelope(clientSchema) } } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
+      delete: {
+        tags: ["Clients"],
+        summary: "Delete a client (admin only). Linked properties keep their record but their client_id is cleared.",
+        security: [cookieAuth],
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: { description: "Deleted" },
+          403: { description: "Only admins may delete", content: { "application/json": { schema: errorEnvelope } } },
+          404: { description: "Not found", content: { "application/json": { schema: errorEnvelope } } },
+        },
+      },
     },
     "/analytics": {
       get: {

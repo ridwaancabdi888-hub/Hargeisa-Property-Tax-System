@@ -9,6 +9,10 @@ export interface PropertyListing {
   location: string;
   latitude: number | null;
   longitude: number | null;
+  clientId: number | null;
+  clientName: string | null;
+  clientPhone: string | null;
+  clientEmail: string | null;
   type: ListingType;
   status: ListingStatus;
   createdBy: number | null;
@@ -31,6 +35,7 @@ export interface PropertyListParams {
   status?: ListingStatus;
   min_price?: number;
   max_price?: number;
+  client_id?: number;
 }
 
 export interface PropertyFormValues {
@@ -40,6 +45,7 @@ export interface PropertyFormValues {
   location: string;
   latitude: string;
   longitude: string;
+  clientId: string;
   type: ListingType;
   status: ListingStatus;
 }

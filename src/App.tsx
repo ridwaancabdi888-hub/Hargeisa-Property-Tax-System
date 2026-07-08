@@ -11,6 +11,7 @@ import UserManagement from "./pages/UserManagement";
 import RegionalOverview from "./pages/RegionalOverview";
 import PropertyInventory from "./pages/PropertyInventory";
 import PropertyListings from "./pages/PropertyListings";
+import Clients from "./pages/Clients";
 import PropertyAnalytics from "./pages/PropertyAnalytics";
 import GISMap from "./pages/GISMap";
 import ReportsAnalytics from "./pages/ReportsAnalytics";
@@ -27,6 +28,7 @@ function App() {
           <Route path="/dashboard" element={<RegionalOverview />} />
           <Route path="/properties" element={<PropertyInventory />} />
           <Route path="/property-listings" element={<PropertyListings />} />
+          <Route path="/clients" element={<Clients />} />
           <Route path="/gis-map" element={<GISMap />} />
           <Route path="/reports" element={<ReportsAnalytics />} />
           <Route path="/profile" element={<Profile />} />

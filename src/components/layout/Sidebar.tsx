@@ -10,6 +10,7 @@ import {
   ScrollText,
   DatabaseBackup,
   Users,
+  Contact,
   LogOut,
   X,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const navItems: { to: string; navKey: keyof TranslationDict["nav"]; icon: typeof
   { to: "/dashboard", navKey: "dashboard", icon: LayoutDashboard },
   { to: "/properties", navKey: "propertyManagement", icon: Building2 },
   { to: "/property-listings", navKey: "properties", icon: Home },
+  { to: "/clients", navKey: "clients", icon: Contact },
   { to: "/property-analytics", navKey: "analytics", icon: BarChart3, roles: ["admin"] },
   { to: "/tax-management", navKey: "taxManagement", icon: Landmark, roles: ["admin"] },
   { to: "/gis-map", navKey: "gisMap", icon: Map },

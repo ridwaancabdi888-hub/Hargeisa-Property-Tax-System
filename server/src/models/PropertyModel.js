@@ -1,18 +1,21 @@
 const pool = require("../config/db");
 
 const FIELDS =
-  "id, title, description, price, location, latitude, longitude, type, status, created_by, created_at, updated_at";
+  "p.id, p.title, p.description, p.price, p.location, p.latitude, p.longitude, p.type, p.status, " +
+  "p.client_id, c.full_name AS client_name, c.phone AS client_phone, c.email AS client_email, " +
+  "p.created_by, p.created_at, p.updated_at";
+const FROM = "properties p LEFT JOIN clients c ON c.id = p.client_id";
 
 async function findById(id) {
-  const [rows] = await pool.query(`SELECT ${FIELDS} FROM properties WHERE id = ? LIMIT 1`, [id]);
+  const [rows] = await pool.query(`SELECT ${FIELDS} FROM ${FROM} WHERE p.id = ? LIMIT 1`, [id]);
   return rows[0] || null;
 }
 
-async function create({ title, description, price, location, latitude, longitude, type, status, createdBy }) {
+async function create({ title, description, price, location, latitude, longitude, clientId, type, status, createdBy }) {
   const [result] = await pool.query(
-    `INSERT INTO properties (title, description, price, location, latitude, longitude, type, status, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'available'), ?)`,
-    [title, description, price, location, latitude ?? null, longitude ?? null, type, status ?? null, createdBy]
+    `INSERT INTO properties (title, description, price, location, latitude, longitude, client_id, type, status, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, 'available'), ?)`,
+    [title, description, price, location, latitude ?? null, longitude ?? null, clientId ?? null, type, status ?? null, createdBy]
   );
   return findById(result.insertId);
 }
@@ -33,8 +36,11 @@ async function remove(id) {
 }
 
 async function list({ whereSql, params, limit, offset }) {
+  // whereSql clauses reference bare column names (e.g. "type = ?") — since
+  // properties is the only table with those column names, no "p." prefix
+  // rewrite is needed for the join to resolve them correctly.
   const [rows] = await pool.query(
-    `SELECT ${FIELDS} FROM properties ${whereSql} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+    `SELECT ${FIELDS} FROM ${FROM} ${whereSql} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`,
     [...params, limit, offset]
   );
   return rows;
@@ -42,7 +48,7 @@ async function list({ whereSql, params, limit, offset }) {
 
 async function count({ whereSql, params }) {
   const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM properties ${whereSql}`,
+    `SELECT COUNT(*) AS total FROM ${FROM} ${whereSql}`,
     params
   );
   return total;

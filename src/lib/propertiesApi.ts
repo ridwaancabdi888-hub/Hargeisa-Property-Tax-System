@@ -54,6 +54,7 @@ function toPayload(payload: PropertyFormValues) {
     price: Number(payload.price),
     latitude: payload.latitude.trim() === "" ? null : Number(payload.latitude),
     longitude: payload.longitude.trim() === "" ? null : Number(payload.longitude),
+    clientId: payload.clientId.trim() === "" ? null : Number(payload.clientId),
   };
 }
 

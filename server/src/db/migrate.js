@@ -79,6 +79,11 @@ async function main() {
   await addColumnIfMissing(connection, DB_NAME, "properties", "latitude", "DECIMAL(10, 7) NULL AFTER location");
   await addColumnIfMissing(connection, DB_NAME, "properties", "longitude", "DECIMAL(10, 7) NULL AFTER latitude");
 
+  // Clients/Owners module. schema.sql's CREATE TABLE IF NOT EXISTS creates the
+  // new `clients` table fine on its own, but an already-existing `properties`
+  // table needs this link column added explicitly.
+  await addColumnIfMissing(connection, DB_NAME, "properties", "client_id", "INT UNSIGNED NULL");
+
   const [existingAdmins] = await connection.query(
     "SELECT id FROM users WHERE role = 'admin' LIMIT 1"
   );

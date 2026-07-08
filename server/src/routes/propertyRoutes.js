@@ -22,6 +22,7 @@ const listQueryValidators = [
     .withMessage("status must be 'available', 'sold' or 'rented'"),
   query("min_price").optional().isFloat({ min: 0 }).withMessage("min_price must be a positive number"),
   query("max_price").optional().isFloat({ min: 0 }).withMessage("max_price must be a positive number"),
+  query("client_id").optional().isInt({ min: 1 }).withMessage("client_id must be a positive integer"),
 ];
 
 const propertyBodyValidators = [
@@ -37,6 +38,10 @@ const propertyBodyValidators = [
     .optional({ nullable: true, checkFalsy: true })
     .isFloat({ min: -180, max: 180 })
     .withMessage("longitude must be between -180 and 180"),
+  body("clientId")
+    .optional({ nullable: true, checkFalsy: true })
+    .isInt({ min: 1 })
+    .withMessage("clientId must be a positive integer"),
   body("type").isIn(["rent", "sale"]).withMessage("Type must be 'rent' or 'sale'"),
   body("status")
     .optional()

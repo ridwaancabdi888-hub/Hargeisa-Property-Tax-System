@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import Button from "../ui/Button";
 import FilterSelect from "../ui/FilterSelect";
 import ImageDropzone, { type DropzoneImage } from "./ImageDropzone";
 import { ApiError } from "../../lib/api";
 import { deletePropertyImage, uploadPropertyImages } from "../../lib/propertyImagesApi";
+import { listClients } from "../../lib/clientsApi";
+import type { Client } from "../../types/client";
 import type { PropertyDetail, PropertyFormValues, PropertyImage, PropertyListing } from "../../types/property";
 
 interface PropertyFormModalProps {
@@ -23,7 +25,7 @@ interface StagedFile {
 
 function initialValues(property?: PropertyDetail): PropertyFormValues {
   if (!property) {
-    return { title: "", description: "", price: "", location: "", latitude: "", longitude: "", type: "sale", status: "available" };
+    return { title: "", description: "", price: "", location: "", latitude: "", longitude: "", clientId: "", type: "sale", status: "available" };
   }
   return {
     title: property.title,
@@ -32,6 +34,7 @@ function initialValues(property?: PropertyDetail): PropertyFormValues {
     location: property.location,
     latitude: property.latitude === null ? "" : String(property.latitude),
     longitude: property.longitude === null ? "" : String(property.longitude),
+    clientId: property.clientId === null ? "" : String(property.clientId),
     type: property.type,
     status: property.status,
   };
@@ -65,12 +68,19 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
   const [existingImages, setExistingImages] = useState<PropertyImage[]>(property?.images ?? []);
   const [isUploadingExisting, setIsUploadingExisting] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
 
   useEffect(() => {
     return () => {
       stagedFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    listClients({ limit: 100 })
+      .then((res) => setClients(res.data))
+      .catch(() => setClients([]));
   }, []);
 
   function update<K extends keyof PropertyFormValues>(key: K, value: PropertyFormValues[K]) {
@@ -251,6 +261,28 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-navy-700 focus:outline-none focus:ring-1 focus:ring-navy-700"
               />
               {errors.longitude && <p className="mt-1 text-xs text-red-600">{errors.longitude}</p>}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="property-owner" className="mb-1.5 block text-xs font-medium text-slate-600">
+              Owner <span className="font-normal text-slate-400">(optional)</span>
+            </label>
+            <div className="relative">
+              <select
+                id="property-owner"
+                value={values.clientId}
+                onChange={(e) => update("clientId", e.target.value)}
+                className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 pr-8 text-sm text-slate-700 focus:border-navy-700 focus:outline-none focus:ring-1 focus:ring-navy-700"
+              >
+                <option value="">No owner on file</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.fullName}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
           </div>
 

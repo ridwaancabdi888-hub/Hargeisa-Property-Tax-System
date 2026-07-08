@@ -7,6 +7,7 @@ const PROPERTY_COLUMNS = [
   { header: "Description", key: "description", width: 40 },
   { header: "Price", key: "price", width: 14 },
   { header: "Location", key: "location", width: 22 },
+  { header: "Owner", key: "clientName", width: 22 },
   { header: "Type", key: "type", width: 10 },
   { header: "Status", key: "status", width: 12 },
   { header: "Created At", key: "createdAt", width: 20 },
@@ -109,6 +110,19 @@ function toTaxBillPdfBuffer(property, taxRate) {
     doc.text(`Listing Type: ${property.type === "sale" ? "Sale" : "Rent"}`);
     doc.text(`Status: ${property.status}`);
     doc.text(`Listing Price: $${Number(property.price).toLocaleString()}`);
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).text("Billed To (Owner)");
+    doc.moveDown(0.5);
+    doc.fontSize(11);
+    if (property.clientName) {
+      doc.text(`Name: ${property.clientName}`);
+      if (property.clientPhone) doc.text(`Phone: ${property.clientPhone}`);
+      if (property.clientEmail) doc.text(`Email: ${property.clientEmail}`);
+    } else {
+      doc.fillColor("#999999").text("No owner on file for this property.");
+      doc.fillColor("#000000");
+    }
     doc.moveDown(1.5);
 
     doc.fontSize(14).text("Tax Assessment");

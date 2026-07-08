@@ -1,6 +1,19 @@
 const PropertyModel = require("../models/PropertyModel");
 
-const ALLOWED_UPDATE_FIELDS = ["title", "description", "price", "location", "latitude", "longitude", "type", "status"];
+// Maps request body fields to their DB column names — PropertyModel.update()
+// uses object keys directly as SQL column names. Most are identical; clientId
+// is the one that differs from its column (client_id).
+const ALLOWED_UPDATE_FIELDS = {
+  title: "title",
+  description: "description",
+  price: "price",
+  location: "location",
+  latitude: "latitude",
+  longitude: "longitude",
+  clientId: "client_id",
+  type: "type",
+  status: "status",
+};
 
 function buildFilters(query) {
   const clauses = [];
@@ -26,6 +39,10 @@ function buildFilters(query) {
   if (query.max_price !== undefined) {
     clauses.push("price <= ?");
     params.push(query.max_price);
+  }
+  if (query.client_id !== undefined) {
+    clauses.push("client_id = ?");
+    params.push(query.client_id);
   }
 
   const whereSql = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
@@ -76,8 +93,8 @@ function createProperty(payload, createdBy) {
 
 function updateProperty(id, payload) {
   const fields = {};
-  for (const key of ALLOWED_UPDATE_FIELDS) {
-    if (payload[key] !== undefined) fields[key] = payload[key];
+  for (const [key, column] of Object.entries(ALLOWED_UPDATE_FIELDS)) {
+    if (payload[key] !== undefined) fields[column] = payload[key];
   }
   return PropertyModel.update(id, fields);
 }

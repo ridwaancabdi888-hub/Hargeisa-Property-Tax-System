@@ -13,6 +13,22 @@ CREATE TABLE IF NOT EXISTS users (
   INDEX idx_users_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS clients (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150) NOT NULL,
+  phone VARCHAR(30) NULL,
+  email VARCHAR(150) NULL,
+  address VARCHAR(255) NULL,
+  notes TEXT NULL,
+  created_by INT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_clients_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_clients_full_name (full_name),
+  INDEX idx_clients_phone (phone),
+  INDEX idx_clients_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS properties (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(150) NOT NULL,
@@ -23,15 +39,18 @@ CREATE TABLE IF NOT EXISTS properties (
   longitude DECIMAL(10, 7) NULL,
   type ENUM('rent', 'sale') NOT NULL,
   status ENUM('available', 'sold', 'rented') NOT NULL DEFAULT 'available',
+  client_id INT UNSIGNED NULL,
   created_by INT UNSIGNED NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT fk_properties_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT fk_properties_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
   INDEX idx_properties_type (type),
   INDEX idx_properties_status (status),
   INDEX idx_properties_price (price),
   INDEX idx_properties_title (title),
-  INDEX idx_properties_location (location)
+  INDEX idx_properties_location (location),
+  INDEX idx_properties_client (client_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS property_images (
