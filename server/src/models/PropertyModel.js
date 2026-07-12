@@ -3,6 +3,7 @@ const pool = require("../config/db");
 const FIELDS =
   "p.id, p.title, p.description, p.price, p.location, p.latitude, p.longitude, p.type, p.status, " +
   "p.client_id, c.full_name AS client_name, c.phone AS client_phone, c.email AS client_email, " +
+  "(SELECT pi.url FROM property_images pi WHERE pi.property_id = p.id ORDER BY pi.id ASC LIMIT 1) AS cover_image_url, " +
   "p.created_by, p.created_at, p.updated_at";
 const FROM = "properties p LEFT JOIN clients c ON c.id = p.client_id";
 

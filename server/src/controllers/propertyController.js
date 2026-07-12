@@ -26,6 +26,7 @@ function toPublicProperty(row) {
     clientName: row.client_name ?? null,
     clientPhone: row.client_phone ?? null,
     clientEmail: row.client_email ?? null,
+    coverImageUrl: row.cover_image_url ?? null,
     createdBy: row.created_by,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

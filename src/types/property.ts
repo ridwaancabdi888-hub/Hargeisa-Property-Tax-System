@@ -13,6 +13,7 @@ export interface PropertyListing {
   clientName: string | null;
   clientPhone: string | null;
   clientEmail: string | null;
+  coverImageUrl: string | null;
   type: ListingType;
   status: ListingStatus;
   createdBy: number | null;

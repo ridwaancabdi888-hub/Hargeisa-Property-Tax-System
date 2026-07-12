@@ -26,6 +26,7 @@ const sampleProperty: PropertyListing = {
   clientName: null,
   clientPhone: null,
   clientEmail: null,
+  coverImageUrl: null,
   type: "sale",
   status: "available",
   createdBy: 1,
