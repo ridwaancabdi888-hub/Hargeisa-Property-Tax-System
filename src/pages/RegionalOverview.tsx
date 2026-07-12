@@ -39,6 +39,13 @@ function computeMonthlyTrend(properties: PropertyListing[]) {
   return buckets.map(({ month, count }) => ({ month, count }));
 }
 
+const sparkColorByTone: Record<string, string> = {
+  primary: "#3b82f6",
+  emerald: "#10b981",
+  slate: "#64748b",
+  amber: "#f59e0b",
+};
+
 export default function RegionalOverview() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -54,6 +61,9 @@ export default function RegionalOverview() {
   const statusLabel = { available: t.common.available, sold: t.common.sold, rented: t.common.rented };
 
   const monthlyTrend = useMemo(() => computeMonthlyTrend(trendSource), [trendSource]);
+  const availableTrend = useMemo(() => computeMonthlyTrend(trendSource.filter((p) => p.status === "available")), [trendSource]);
+  const soldTrend = useMemo(() => computeMonthlyTrend(trendSource.filter((p) => p.status === "sold")), [trendSource]);
+  const rentedTrend = useMemo(() => computeMonthlyTrend(trendSource.filter((p) => p.status === "rented")), [trendSource]);
 
   const columns: Column<PropertyListing>[] = [
     { header: t.common.title, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.title}</span> },
@@ -86,17 +96,23 @@ export default function RegionalOverview() {
   const totalForRatio = counts?.total || 1;
 
   return (
-    <div>
+    <div className="relative">
+      <div className="pointer-events-none absolute -top-16 right-0 -z-10 h-72 w-72 rounded-full bg-blue-200/25 blur-3xl dark:bg-blue-500/10" />
+      <div className="pointer-events-none absolute -top-8 left-1/3 -z-10 h-64 w-64 rounded-full bg-emerald-200/20 blur-3xl dark:bg-emerald-500/10" />
+
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">{t.pages.dashboard.title}</h1>
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl dark:text-white">{t.pages.dashboard.title}</h1>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-700 ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/15 dark:text-emerald-400">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              </span>
+              Live
             </span>
           </div>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t.pages.dashboard.subtitle}</p>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{t.pages.dashboard.subtitle}</p>
         </div>
       </div>
 
@@ -115,6 +131,7 @@ export default function RegionalOverview() {
             label={t.pages.dashboard.totalProperties}
             value={String(counts.total)}
             tone="primary"
+            trend={monthlyTrend}
           />
           <PremiumStatCard
             icon={Tag}
@@ -122,6 +139,7 @@ export default function RegionalOverview() {
             value={String(counts.available)}
             tone="emerald"
             ratioLabel={`${Math.round((counts.available / totalForRatio) * 100)}%`}
+            trend={availableTrend}
           />
           <PremiumStatCard
             icon={CheckCircle2}
@@ -129,6 +147,7 @@ export default function RegionalOverview() {
             value={String(counts.sold)}
             tone="slate"
             ratioLabel={`${Math.round((counts.sold / totalForRatio) * 100)}%`}
+            trend={soldTrend}
           />
           <PremiumStatCard
             icon={Key}
@@ -136,6 +155,7 @@ export default function RegionalOverview() {
             value={String(counts.rented)}
             tone="amber"
             ratioLabel={`${Math.round((counts.rented / totalForRatio) * 100)}%`}
+            trend={rentedTrend}
           />
         </div>
       )}
@@ -239,10 +259,12 @@ interface PremiumStatCardProps {
   value: string;
   tone: "primary" | "emerald" | "slate" | "amber";
   ratioLabel?: string;
+  trend: { month: string; count: number }[];
 }
 
-function PremiumStatCard({ icon: Icon, label, value, tone, ratioLabel }: PremiumStatCardProps) {
+function PremiumStatCard({ icon: Icon, label, value, tone, ratioLabel, trend }: PremiumStatCardProps) {
   const c = statCardTone[tone];
+  const sparkColor = sparkColorByTone[tone];
   return (
     <div className="group relative overflow-hidden rounded-3xl border border-slate-100 bg-white p-5 shadow-premium transition-all duration-300 hover:-translate-y-1 dark:border-slate-700 dark:bg-slate-800">
       <div className="flex items-center justify-between">
@@ -255,6 +277,19 @@ function PremiumStatCard({ icon: Icon, label, value, tone, ratioLabel }: Premium
       </div>
       <p className="mt-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
       <p className="mt-1 text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+      <div className="mt-3 h-10 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={trend} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id={`spark-${tone}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={sparkColor} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={sparkColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <Area type="monotone" dataKey="count" stroke={sparkColor} strokeWidth={1.75} fill={`url(#spark-${tone})`} isAnimationActive={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
