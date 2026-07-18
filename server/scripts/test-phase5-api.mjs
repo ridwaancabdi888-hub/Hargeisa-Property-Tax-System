@@ -19,7 +19,6 @@ async function run() {
   const password = "Phase5Pass1";
   const admin = await login("admin", "Admin@12345");
   const adminHeaders = buildHeaders({ csrfToken, csrfCookie, sessionCookie: admin.cookie });
-  const adminUploadHeaders = { Cookie: `${csrfCookie}; ${admin.cookie}`, "X-CSRF-Token": csrfToken };
 
   const createRes = await fetch(`${BASE_URL}/users`, {
     method: "POST",

@@ -2,7 +2,9 @@ function notFound(req, res) {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
 }
 
-function errorHandler(err, req, res, next) {
+// The unused 4th parameter is required: Express only treats a middleware as an
+// error handler when its function signature declares exactly four parameters.
+function errorHandler(err, req, res, _next) {
   // Always log the full error server-side regardless of environment.
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, err);
 
