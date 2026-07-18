@@ -36,7 +36,20 @@ npm install
 
 ## Environment Variables
 
-Copy `server/.env.example` to `server/.env` and fill in real values:
+Create the backend environment file from the provided template:
+
+```bash
+# macOS/Linux
+cp server/.env.example server/.env
+
+# Windows Command Prompt
+copy server\.env.example server\.env
+
+# Windows PowerShell
+Copy-Item server/.env.example server/.env
+```
+
+Then fill in real values locally. Never commit `server/.env`, `server/.env.test`, or the root `.env`; these files are already excluded by `.gitignore`.
 
 | Variable | Description |
 |---|---|
