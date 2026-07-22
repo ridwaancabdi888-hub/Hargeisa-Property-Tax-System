@@ -4,6 +4,12 @@ A full-stack tax and property management platform: regional overview dashboards,
 
 **Stack:** React 19 + TypeScript + Tailwind (Vite) · Express + MySQL/MariaDB · JWT cookie auth
 
+## Search indexing policy
+
+The deployed Vercel URL is a private administrative demo, not a public municipal information portal. HTML metadata, HTTP response headers, and `robots.txt` therefore instruct search engines not to index sign-in, property, client, tax, GIS, report, profile, backup, activity-log, or user-management routes. A sitemap and public structured data are intentionally omitted.
+
+Do not submit this dashboard to Google Search Console for indexing. If an authorized public municipal portal is created later, deploy it on a separate canonical domain and publish only approved contact details, legislation, service instructions, office locations, accessibility information, and privacy terms. That public portal should receive a separate SEO and legal review.
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
