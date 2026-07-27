@@ -111,6 +111,10 @@ npm test
 
 # End-to-end tests (Playwright) — requires the backend and frontend dev servers running
 npm run test:e2e
+
+# Static checks (lint, TypeScript, and production bundle)
+npm run lint
+npm run build
 ```
 
 Before the first `server/npm test` run, copy `server/.env.example` to `server/.env.test`, point `DB_NAME` at a dedicated test database (e.g. `hargeisa_tax_test_db`), and use a distinct `JWT_SECRET`. The Jest `pretest` script migrates that database automatically.
