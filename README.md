@@ -98,6 +98,8 @@ npm run dev
 
 Open `http://localhost:5173` and sign in with your seeded admin credentials.
 
+To preview the optimized frontend build locally, run `npm run build` and then `npm run preview` from the repository root.
+
 ## Testing
 
 ```bash
