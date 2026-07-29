@@ -70,6 +70,19 @@ class MySqlRateLimitStore {
       }
 
       await connection.commit();
+
+      // Remove long-expired IP buckets occasionally without adding a cleanup
+      // query to every request. The current request is already committed, so a
+      // cleanup failure is logged but never changes its rate-limit result.
+      if (Math.random() < 0.01) {
+        pool.query(
+          `DELETE FROM rate_limit_buckets
+           WHERE updated_at < DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 2 DAY)`,
+        ).catch((error) => {
+          console.error("Rate-limit cleanup failed:", error.message);
+        });
+      }
+
       return {
         totalHits,
         resetTime: new Date(windowStart + this.windowMs),
