@@ -112,3 +112,12 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   INDEX idx_activity_logs_action (action),
   INDEX idx_activity_logs_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS rate_limit_buckets (
+  bucket_key CHAR(64) PRIMARY KEY,
+  window_start_ms BIGINT UNSIGNED NOT NULL,
+  request_count INT UNSIGNED NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_rate_limit_buckets_updated_at (updated_at),
+  CONSTRAINT chk_rate_limit_request_count CHECK (request_count >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
