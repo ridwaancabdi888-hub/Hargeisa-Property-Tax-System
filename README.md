@@ -185,7 +185,7 @@ e2e/                    Playwright end-to-end tests
 ## Troubleshooting
 
 - **401s immediately after logging in / session not persisting**: confirm `CLIENT_URL` matches the frontend's actual origin and that you're accessing the frontend via the same host/port it's configured for — cookies are same-site.
-- **`429 Too many requests`**: rate limits are in-memory and reset on backend restart; if you trip them during heavy manual testing, restart the backend process.
+- **`429 Too many requests`**: rate limits are shared through MySQL across all backend instances and reset automatically when their 15-minute window expires.
 - **Backup/restore fails with a spawn error**: verify `MYSQLDUMP_BIN`/`MYSQL_BIN` point at valid executables on `PATH` or as absolute paths.
 - **Jest hangs after tests finish**: expected with a long-lived MySQL pool; `npm test` in `server/` already runs with `--forceExit`.
 - **Windows/XAMPP dev servers dying silently**: MariaDB, the backend, and the frontend dev server all run as separate background processes — if any URL stops responding, just restart that one process (`mysqld --defaults-file=my.ini --standalone`, `npm run dev` in `server/`, `npm run dev` at root).
