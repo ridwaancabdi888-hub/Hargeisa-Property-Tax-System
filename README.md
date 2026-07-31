@@ -25,7 +25,7 @@ Do not submit this dashboard to Google Search Console for indexing. If an author
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 20.19+ (20.x) or 22.12+
 - A MySQL-compatible server (MariaDB via XAMPP works well on Windows) with `mysql`/`mysqldump` CLIs on `PATH` (needed for backup/restore)
 - Docker + Docker Compose, only if you want the containerized deployment path
 
