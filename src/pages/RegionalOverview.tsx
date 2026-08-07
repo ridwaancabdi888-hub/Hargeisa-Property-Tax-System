@@ -166,8 +166,15 @@ export default function RegionalOverview() {
           subtitle={t.pages.dashboard.propertiesByTypeSubtitle}
           className="!rounded-3xl !shadow-premium lg:col-span-2"
         >
+          {!isLoading && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <PropertyPhotoGroup label={t.common.sale} tone="blue" properties={saleShowcase} onSeeAll={() => navigate("/property-listings")} viewAllLabel={t.common.viewAll} />
+              <PropertyPhotoGroup label={t.common.rent} tone="slate" properties={rentShowcase} onSeeAll={() => navigate("/property-listings")} viewAllLabel={t.common.viewAll} />
+            </div>
+          )}
+
           {counts && (
-            <>
+            <div className="mt-6">
               <ListingSplitBar rent={counts.rent} sale={counts.sale} rentLabel={t.common.rent} saleLabel={t.common.sale} />
 
               <div className="mt-6 h-40">
@@ -188,13 +195,6 @@ export default function RegionalOverview() {
                 </ResponsiveContainer>
               </div>
               <p className="mt-1 text-center text-[11px] text-slate-400">New listings over the last 6 months</p>
-            </>
-          )}
-
-          {!isLoading && (
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <PropertyPhotoGroup label={t.common.sale} tone="blue" properties={saleShowcase} onSeeAll={() => navigate("/property-listings")} viewAllLabel={t.common.viewAll} />
-              <PropertyPhotoGroup label={t.common.rent} tone="slate" properties={rentShowcase} onSeeAll={() => navigate("/property-listings")} viewAllLabel={t.common.viewAll} />
             </div>
           )}
         </Card>

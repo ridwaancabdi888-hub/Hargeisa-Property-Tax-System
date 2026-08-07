@@ -41,6 +41,7 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+~$*
 
 # Claude Code local settings
 .claude/

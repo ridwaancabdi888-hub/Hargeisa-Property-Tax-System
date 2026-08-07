@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
 export const ADMIN_USERNAME = "admin";
-export const ADMIN_PASSWORD = "Admin@12345";
+export const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Admin@12345";
 
 export async function login(page: Page, username: string, password: string) {
   await page.goto("/");
