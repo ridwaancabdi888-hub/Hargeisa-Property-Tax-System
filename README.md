@@ -17,6 +17,7 @@ Do not submit this dashboard to Google Search Console for indexing. If an author
 - [Environment Variables](#environment-variables)
 - [Database Setup](#database-setup)
 - [Running in Development](#running-in-development)
+- [Demo Dataset and Presentation](#demo-dataset-and-presentation)
 - [Testing](#testing)
 - [API Documentation](#api-documentation)
 - [Production Deployment](#production-deployment)
@@ -99,6 +100,22 @@ npm run dev
 Open `http://localhost:5173` and sign in with your seeded admin credentials.
 
 To preview the optimized frontend build locally, run `npm run build` and then `npm run preview` from the repository root.
+
+## Demo Dataset and Presentation
+
+After migrating the database and configuring the backend environment, populate the fictional university presentation dataset from the repository root:
+
+```bash
+npm run seed:demo
+```
+
+The seeder can be run again safely: it refreshes its tagged demo users, clients, properties, images, and activity records without creating duplicates. To remove only records created by the demo seeder:
+
+```bash
+npm run seed:demo:reset
+```
+
+For the suggested presentation flow and the available demo roles, see [PRESENTATION_GUIDE.md](PRESENTATION_GUIDE.md). Do not use the demo accounts or fictional data in production.
 
 ## Testing
 
