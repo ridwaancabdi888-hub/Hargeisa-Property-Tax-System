@@ -1,4 +1,5 @@
 import { apiFetch } from "./api";
+import { demoCsvUrl, demoExcelUrl, demoTaxBillUrl, isDemoDeployment } from "./demoApi";
 import type {
   PropertyCounts,
   PropertyDetail,
@@ -77,13 +78,16 @@ export function deleteProperty(id: number) {
 }
 
 export function getCsvExportUrl(params: PropertyListParams) {
+  if (isDemoDeployment()) return demoCsvUrl();
   return `/api/property-listings/export/csv${buildQueryString(params)}`;
 }
 
 export function getExcelExportUrl(params: PropertyListParams) {
+  if (isDemoDeployment()) return demoExcelUrl();
   return `/api/property-listings/export/excel${buildQueryString(params)}`;
 }
 
 export function getTaxBillUrl(id: number) {
+  if (isDemoDeployment()) return demoTaxBillUrl(id);
   return `/api/property-listings/${id}/tax-bill`;
 }
