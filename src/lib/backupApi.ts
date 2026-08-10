@@ -1,4 +1,5 @@
 import { apiFetch, apiUpload } from "./api";
+import { demoBackupUrl, isDemoDeployment } from "./demoApi";
 import type { BackupEntry } from "../types/backup";
 
 interface ListResponse {
@@ -18,6 +19,7 @@ export function createBackup() {
 }
 
 export function getBackupDownloadUrl(filename: string) {
+  if (isDemoDeployment()) return demoBackupUrl(filename);
   return `/api/backups/${encodeURIComponent(filename)}/download`;
 }
 
