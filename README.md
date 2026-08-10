@@ -115,7 +115,13 @@ The seeder can be run again safely: it refreshes its tagged demo users, clients,
 npm run seed:demo:reset
 ```
 
-For the suggested presentation flow and the available demo roles, see [PRESENTATION_GUIDE.md](PRESENTATION_GUIDE.md). Do not use the demo accounts or fictional data in production.
+### Hosted Vercel demo
+
+The hosted Vercel build automatically uses a self-contained browser demo API. It starts with fictional sample records, keeps changes only in that browser's local storage, and does not connect to the Express/MySQL backend. Clearing the site's browser data resets that copy of the demo.
+
+CSV/Excel exports, tax bills, and database backup downloads in the hosted demo are illustrative files generated in the browser. For the full backend workflow, run the local seed commands above against a configured MySQL/MariaDB database.
+
+Do not use the demo mode or fictional data in production.
 
 ## Testing
 
