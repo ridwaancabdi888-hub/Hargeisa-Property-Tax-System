@@ -1,3 +1,5 @@
+import { demoApiFetch, demoApiUpload, isDemoDeployment } from "./demoApi";
+
 export class ApiError extends Error {
   status: number;
 
@@ -48,6 +50,14 @@ async function csrfHeaders(method: string): Promise<Record<string, string>> {
 }
 
 export async function apiFetch<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+  if (isDemoDeployment()) {
+    try {
+      return await demoApiFetch<T>(path, options);
+    } catch (error) {
+      throw new ApiError(error instanceof Error ? error.message : "Demo request failed", 400);
+    }
+  }
+
   const method = options.method ?? "GET";
   const res = await fetch(`/api${path}`, {
     credentials: "include",
@@ -71,6 +81,14 @@ export async function apiFetch<T = unknown>(path: string, options: RequestInit =
 // For multipart/form-data uploads — no Content-Type header set here, so the browser
 // can attach its own boundary. Never use apiFetch (which forces JSON) for file uploads.
 export async function apiUpload<T = unknown>(path: string, formData: FormData, options: RequestInit = {}): Promise<T> {
+  if (isDemoDeployment()) {
+    try {
+      return await demoApiUpload<T>(path, formData);
+    } catch (error) {
+      throw new ApiError(error instanceof Error ? error.message : "Demo upload failed", 400);
+    }
+  }
+
   const method = options.method ?? "POST";
   const res = await fetch(`/api${path}`, {
     method,
