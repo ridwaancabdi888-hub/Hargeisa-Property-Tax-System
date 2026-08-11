@@ -4,6 +4,8 @@ A full-stack tax and property management platform: regional overview dashboards,
 
 **Stack:** React 19 + TypeScript + Tailwind (Vite) · Express + MySQL/MariaDB · JWT cookie auth
 
+**Hosted demo:** [https://hargaisa-text-property-system.vercel.app/](https://hargaisa-text-property-system.vercel.app/)
+
 ## Search indexing policy
 
 The deployed Vercel URL is a private administrative demo, not a public municipal information portal. HTML metadata, HTTP response headers, and `robots.txt` therefore instruct search engines not to index sign-in, property, client, tax, GIS, report, profile, backup, activity-log, or user-management routes. A sitemap and public structured data are intentionally omitted.
