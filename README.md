@@ -133,7 +133,8 @@ Do not use the demo mode or fictional data in production.
 cd server
 npm test
 
-# Frontend component tests (Vitest + React Testing Library)
+# Return to the repository root, then run frontend component tests
+cd ..
 npm test
 
 # End-to-end tests (Playwright) — requires the backend and frontend dev servers running
