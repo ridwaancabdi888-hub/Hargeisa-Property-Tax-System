@@ -128,9 +128,12 @@ Do not use the demo mode or fictional data in production.
 ## Testing
 
 ```bash
+# Backend unit tests only (no database required)
+cd server
+npm run test:unit
+
 # Backend unit + integration tests (Jest + Supertest)
 # Uses a separate database (see server/.env.test) — never touches your dev DB
-cd server
 npm test
 
 # Return to the repository root, then run frontend component tests

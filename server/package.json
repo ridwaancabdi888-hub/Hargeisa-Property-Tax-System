@@ -11,7 +11,8 @@
     "seed:demo": "node scripts/seedDemo.js",
     "seed:demo:reset": "node scripts/seedDemo.js --reset",
     "pretest": "node tests/migrateTestDb.js",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand --forceExit",
+    "test:unit": "jest tests/unit --runInBand --forceExit"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
