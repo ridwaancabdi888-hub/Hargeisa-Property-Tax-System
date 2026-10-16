@@ -234,7 +234,7 @@ export default function RegionalOverview() {
         {isLoading ? (
           <Skeleton className="h-48" />
         ) : (
-          <DataTable columns={columns} rows={recent} rowKey={(r) => String(r.id)} />
+          <DataTable caption="Recent properties" columns={columns} rows={recent} rowKey={(r) => String(r.id)} />
         )}
       </Card>
     </div>

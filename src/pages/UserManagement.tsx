@@ -199,7 +199,7 @@ export default function UserManagement() {
         ) : users.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
-          <DataTable columns={columns} rows={users} rowKey={(r) => String(r.id)} />
+          <DataTable caption="System users" columns={columns} rows={users} rowKey={(r) => String(r.id)} />
         )}
 
         <div className="mt-4">

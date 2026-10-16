@@ -138,7 +138,7 @@ export default function Clients() {
         ) : clients.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
-          <DataTable columns={columns} rows={clients} rowKey={(r) => String(r.id)} />
+          <DataTable caption="Clients" columns={columns} rows={clients} rowKey={(r) => String(r.id)} />
         )}
 
         <div className="mt-4">

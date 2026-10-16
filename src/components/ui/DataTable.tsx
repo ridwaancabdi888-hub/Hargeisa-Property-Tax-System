@@ -7,6 +7,7 @@ export interface Column<T> {
 }
 
 interface DataTableProps<T> {
+  caption: string;
   columns: Column<T>[];
   rows: T[];
   rowKey: (row: T) => string;
@@ -14,15 +15,17 @@ interface DataTableProps<T> {
 
 const alignClass = { left: "text-left", right: "text-right", center: "text-center" } as const;
 
-export default function DataTable<T>({ columns, rows, rowKey }: DataTableProps<T>) {
+export default function DataTable<T>({ caption, columns, rows, rowKey }: DataTableProps<T>) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-max border-collapse text-sm">
+        <caption className="sr-only">{caption}</caption>
         <thead>
           <tr className="border-b border-slate-200 dark:border-slate-700">
             {columns.map((col) => (
               <th
                 key={col.header}
+                scope="col"
                 className={`whitespace-nowrap px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400 ${alignClass[col.align ?? "left"]}`}
               >
                 {col.header}

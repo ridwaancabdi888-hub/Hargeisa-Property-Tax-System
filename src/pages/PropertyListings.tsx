@@ -250,7 +250,7 @@ export default function PropertyListings() {
         ) : properties.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500">{t.common.noResults}</p>
         ) : (
-          <DataTable columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
+          <DataTable caption="Property listings" columns={columns} rows={properties} rowKey={(r) => String(r.id)} />
         )}
 
         <div className="mt-4">

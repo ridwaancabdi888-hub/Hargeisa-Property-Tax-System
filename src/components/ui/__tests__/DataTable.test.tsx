@@ -20,15 +20,16 @@ const rows: Row[] = [
 
 describe("DataTable", () => {
   test("renders a header cell per column and a row per data item", () => {
-    render(<DataTable columns={columns} rows={rows} rowKey={(r) => String(r.id)} />);
-    expect(screen.getByText("Name")).toBeInTheDocument();
+    render(<DataTable caption="Account balances" columns={columns} rows={rows} rowKey={(r) => String(r.id)} />);
+    expect(screen.getByRole("table", { name: "Account balances" })).toBeInTheDocument();
+    expect(screen.getByText("Name")).toHaveAttribute("scope", "col");
     expect(screen.getByText("Amount")).toBeInTheDocument();
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("$200")).toBeInTheDocument();
   });
 
   test("renders no data rows for an empty list", () => {
-    render(<DataTable columns={columns} rows={[]} rowKey={(r) => String(r.id)} />);
+    render(<DataTable caption="Account balances" columns={columns} rows={[]} rowKey={(r) => String(r.id)} />);
     expect(screen.queryAllByRole("row")).toHaveLength(1); // header row only
   });
 });

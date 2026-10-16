@@ -117,7 +117,7 @@ export default function ActivityLog() {
         ) : logs.length === 0 ? (
           <p className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No activity matches your filters.</p>
         ) : (
-          <DataTable columns={columns} rows={logs} rowKey={(r) => String(r.id)} />
+          <DataTable caption="Activity log" columns={columns} rows={logs} rowKey={(r) => String(r.id)} />
         )}
 
         <div className="mt-4">
