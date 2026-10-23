@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import Button from "../ui/Button";
 import FilterSelect from "../ui/FilterSelect";
@@ -65,6 +65,7 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [stagedFiles, setStagedFiles] = useState<StagedFile[]>([]);
+  const stagedFilesRef = useRef<StagedFile[]>([]);
   const [existingImages, setExistingImages] = useState<PropertyImage[]>(property?.images ?? []);
   const [isUploadingExisting, setIsUploadingExisting] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -72,9 +73,8 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
 
   useEffect(() => {
     return () => {
-      stagedFiles.forEach((f) => URL.revokeObjectURL(f.previewUrl));
+      stagedFilesRef.current.forEach((f) => URL.revokeObjectURL(f.previewUrl));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -89,14 +89,20 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
 
   function handleStageFiles(files: File[]) {
     const staged = files.map((file) => ({ key: `${file.name}-${Date.now()}-${Math.random()}`, file, previewUrl: URL.createObjectURL(file) }));
-    setStagedFiles((prev) => [...prev, ...staged]);
+    setStagedFiles((prev) => {
+      const next = [...prev, ...staged];
+      stagedFilesRef.current = next;
+      return next;
+    });
   }
 
   function handleRemoveStaged(key: string) {
     setStagedFiles((prev) => {
       const target = prev.find((f) => f.key === key);
       if (target) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((f) => f.key !== key);
+      const next = prev.filter((f) => f.key !== key);
+      stagedFilesRef.current = next;
+      return next;
     });
   }
 

@@ -35,6 +35,22 @@ const sampleProperty: PropertyListing = {
 };
 
 describe("PropertyFormModal", () => {
+  test("releases staged image previews when the form closes", async () => {
+    const createObjectURL = vi.fn(() => "blob:property-preview");
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", { configurable: true, value: createObjectURL });
+    Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: revokeObjectURL });
+    const user = userEvent.setup();
+    const { unmount } = render(<PropertyFormModal onSubmit={vi.fn()} onClose={vi.fn()} />);
+
+    const image = new File(["image"], "property.png", { type: "image/png" });
+    await user.upload(screen.getByLabelText("Property image files"), image);
+    expect(createObjectURL).toHaveBeenCalledWith(image);
+
+    unmount();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:property-preview");
+  });
+
   test("shows validation errors and does not call onSubmit when fields are invalid", async () => {
     const onSubmit = vi.fn();
     render(<PropertyFormModal onSubmit={onSubmit} onClose={vi.fn()} />);

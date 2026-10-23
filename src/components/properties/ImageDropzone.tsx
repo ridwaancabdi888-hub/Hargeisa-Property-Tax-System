@@ -54,21 +54,30 @@ export default function ImageDropzone({ images, onFilesSelected, onRemove, disab
           setIsDragOver(false);
           if (!disabled) validateAndForward(e.dataTransfer.files);
         }}
-        onClick={() => !disabled && inputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-colors ${
+        className={`rounded-lg border-2 border-dashed text-center transition-colors ${
           isDragOver ? "border-navy-700 bg-navy-50" : "border-slate-300 hover:bg-slate-50"
         } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
       >
-        <ImagePlus size={20} className="text-slate-400" />
-        <p className="text-xs font-medium text-slate-600">Drag & drop images here, or click to browse</p>
-        <p className="text-[11px] text-slate-400">JPG, PNG, or WEBP — up to 5MB each</p>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          className="flex w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md px-4 py-6 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-navy-700 disabled:cursor-not-allowed"
+          aria-label="Choose property images"
+          aria-describedby="property-image-help"
+        >
+          <ImagePlus size={20} className="text-slate-400" aria-hidden="true" />
+          <span className="text-xs font-medium text-slate-600">Choose property images</span>
+          <span id="property-image-help" className="text-[11px] text-slate-400">Drag and drop, or browse — JPG, PNG, or WEBP up to 5MB each</span>
+        </button>
         <input
           ref={inputRef}
           type="file"
+          aria-label="Property image files"
           accept={ACCEPTED_TYPES.join(",")}
           multiple
           disabled={disabled}
-          className="hidden"
+          className="sr-only"
           onChange={(e) => {
             validateAndForward(e.target.files);
             e.target.value = "";
@@ -76,11 +85,11 @@ export default function ImageDropzone({ images, onFilesSelected, onRemove, disab
         />
       </div>
 
-      {validationError && <p className="mt-1.5 text-xs text-red-600">{validationError}</p>}
+      {validationError && <p role="alert" className="mt-1.5 text-xs text-red-600">{validationError}</p>}
 
       {images.length > 0 && (
         <div className="mt-3 grid grid-cols-4 gap-2">
-          {images.map((image) => (
+          {images.map((image, index) => (
             <div key={image.key} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200">
               <img src={image.previewUrl} alt="" className="h-full w-full object-cover" />
               {image.isUploading ? (
@@ -91,8 +100,8 @@ export default function ImageDropzone({ images, onFilesSelected, onRemove, disab
                 <button
                   type="button"
                   onClick={() => onRemove(image.key)}
-                  aria-label="Remove image"
-                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label={`Remove image ${index + 1}`}
+                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white"
                 >
                   <X size={12} />
                 </button>
