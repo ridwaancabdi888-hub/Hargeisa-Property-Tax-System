@@ -18,6 +18,7 @@ import type { CreateUserValues, ManagedUser, UserListMeta } from "../types/user"
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 const roleOptions = ["All Roles", "admin", "agent", "viewer"];
 const roleTone = { admin: "blue", agent: "slate", viewer: "amber" } as const;
@@ -35,6 +36,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("All Roles");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const [isCreating, setIsCreating] = useState(false);
   const [deactivating, setDeactivating] = useState<ManagedUser | null>(null);
@@ -42,6 +44,7 @@ export default function UserManagement() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchUsers = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
@@ -51,14 +54,16 @@ export default function UserManagement() {
         search: search || undefined,
         role: role === "All Roles" ? undefined : (role as ManagedUser["role"]),
       });
-      setUsers(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setUsers(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load users. Please try again.");
+      if (isCurrent()) setError("Failed to load users. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search, role]);
+  }, [page, search, role, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchUsers, 300);

@@ -16,6 +16,7 @@ import { useTranslation } from "../lib/i18n/useTranslation";
 import type { PropertyDetail, PropertyFormValues, PropertyListMeta, PropertyListing } from "../types/property";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
@@ -41,11 +42,13 @@ export default function PropertyInventory() {
   const [status, setStatus] = useState("All Statuses");
   const [type, setType] = useState("All Types");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const [editingProperty, setEditingProperty] = useState<PropertyDetail | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const fetchProperties = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
@@ -56,14 +59,16 @@ export default function PropertyInventory() {
         status: status === "All Statuses" ? undefined : (status as PropertyListing["status"]),
         type: type === "All Types" ? undefined : (type as PropertyListing["type"]),
       });
-      setProperties(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setProperties(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load properties. Please try again.");
+      if (isCurrent()) setError("Failed to load properties. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search, status, type]);
+  }, [page, search, status, type, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchProperties, 300);

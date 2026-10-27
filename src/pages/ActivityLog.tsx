@@ -10,6 +10,7 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 import { listActivityLogs } from "../lib/activityLogApi";
 import { useTranslation } from "../lib/i18n/useTranslation";
 import { ACTIVITY_ACTIONS, type ActivityLogEntry, type ActivityLogListMeta } from "../types/activityLog";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 const actionOptions = ["All Actions", ...ACTIVITY_ACTIONS];
 
@@ -42,8 +43,10 @@ export default function ActivityLog() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const fetchLogs = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
@@ -55,14 +58,16 @@ export default function ActivityLog() {
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
       });
-      setLogs(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setLogs(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load activity logs. Please try again.");
+      if (isCurrent()) setError("Failed to load activity logs. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search, action, dateFrom, dateTo]);
+  }, [page, search, action, dateFrom, dateTo, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchLogs, 300);

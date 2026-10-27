@@ -25,6 +25,7 @@ import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
 import { useTranslation } from "../lib/i18n/useTranslation";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 const currency = (n: number) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
@@ -57,6 +58,7 @@ export default function PropertyListings() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const [editingProperty, setEditingProperty] = useState<PropertyDetail | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -64,6 +66,7 @@ export default function PropertyListings() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProperties = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
@@ -76,14 +79,16 @@ export default function PropertyListings() {
         min_price: minPrice ? Number(minPrice) : undefined,
         max_price: maxPrice ? Number(maxPrice) : undefined,
       });
-      setProperties(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setProperties(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load properties. Please try again.");
+      if (isCurrent()) setError("Failed to load properties. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search, type, status, minPrice, maxPrice]);
+  }, [page, search, type, status, minPrice, maxPrice, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchProperties, 300);

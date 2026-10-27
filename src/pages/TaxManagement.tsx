@@ -14,6 +14,7 @@ import Skeleton from "../components/ui/Skeleton";
 import { getPropertyCounts, getTaxBillUrl, listProperties } from "../lib/propertiesApi";
 import { useTranslation } from "../lib/i18n/useTranslation";
 import type { PropertyListMeta, PropertyListing } from "../types/property";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 // Illustrative flat municipal tax rate, matching TAX_RATE in
 // server/src/controllers/propertyController.js. Used here only to preview
@@ -38,10 +39,12 @@ export default function TaxManagement() {
   const [status, setStatus] = useState("All Statuses");
   const [type, setType] = useState("All Types");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const [totals, setTotals] = useState<{ total: number; assessedValue: number; sold: number } | null>(null);
 
   const fetchProperties = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
@@ -52,14 +55,16 @@ export default function TaxManagement() {
         status: status === "All Statuses" ? undefined : (status as PropertyListing["status"]),
         type: type === "All Types" ? undefined : (type as PropertyListing["type"]),
       });
-      setProperties(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setProperties(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load properties. Please try again.");
+      if (isCurrent()) setError("Failed to load properties. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search, status, type]);
+  }, [page, search, status, type, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchProperties, 300);

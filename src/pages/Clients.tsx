@@ -15,6 +15,7 @@ import type { Client, ClientFormValues, ClientListMeta } from "../types/client";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { ApiError } from "../lib/api";
+import { useLatestRequestTracker } from "../lib/latestRequest";
 
 export default function Clients() {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export default function Clients() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const requestTracker = useLatestRequestTracker();
 
   const [isCreating, setIsCreating] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -37,18 +39,21 @@ export default function Clients() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchClients = useCallback(async () => {
+    const isCurrent = requestTracker.begin();
     setIsLoading(true);
     setError(null);
     try {
       const res = await listClients({ page, limit: 10, search: search || undefined });
-      setClients(res.data);
-      setMeta(res.meta);
+      if (isCurrent()) {
+        setClients(res.data);
+        setMeta(res.meta);
+      }
     } catch {
-      setError("Failed to load clients. Please try again.");
+      if (isCurrent()) setError("Failed to load clients. Please try again.");
     } finally {
-      setIsLoading(false);
+      if (isCurrent()) setIsLoading(false);
     }
-  }, [page, search]);
+  }, [page, search, requestTracker]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchClients, 300);
