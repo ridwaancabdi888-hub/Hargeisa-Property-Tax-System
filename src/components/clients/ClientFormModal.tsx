@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { X } from "lucide-react";
 import Button from "../ui/Button";
+import useModalFocusTrap from "../ui/useModalFocusTrap";
 import { ApiError } from "../../lib/api";
 import type { Client, ClientFormValues } from "../../types/client";
 
@@ -37,6 +38,8 @@ export default function ClientFormModal({ client, onSubmit, onClose }: ClientFor
   const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const titleId = useId();
+  const dialogRef = useModalFocusTrap({ onClose, canClose: !isSubmitting });
 
   function update<K extends keyof ClientFormValues>(key: K, value: ClientFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -62,9 +65,16 @@ export default function ClientFormModal({ client, onSubmit, onClose }: ClientFor
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-card">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="w-full max-w-md rounded-xl bg-white p-6 shadow-card"
+      >
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-base font-semibold text-slate-900">{client ? "Edit Client" : "Add Client"}</h2>
+          <h2 id={titleId} className="text-base font-semibold text-slate-900">{client ? "Edit Client" : "Add Client"}</h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
             <X size={18} />
           </button>
@@ -77,6 +87,7 @@ export default function ClientFormModal({ client, onSubmit, onClose }: ClientFor
             <label htmlFor="client-fullname" className="mb-1.5 block text-xs font-medium text-slate-600">Full Name</label>
             <input
               id="client-fullname"
+              data-modal-autofocus
               type="text"
               value={values.fullName}
               onChange={(e) => update("fullName", e.target.value)}

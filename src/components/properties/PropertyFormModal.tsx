@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import Button from "../ui/Button";
 import FilterSelect from "../ui/FilterSelect";
+import useModalFocusTrap from "../ui/useModalFocusTrap";
 import ImageDropzone, { type DropzoneImage } from "./ImageDropzone";
 import { ApiError } from "../../lib/api";
 import { deletePropertyImage, uploadPropertyImages } from "../../lib/propertyImagesApi";
@@ -70,6 +71,8 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
   const [isUploadingExisting, setIsUploadingExisting] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
+  const titleId = useId();
+  const dialogRef = useModalFocusTrap({ onClose, canClose: !isSubmitting });
 
   useEffect(() => {
     return () => {
@@ -158,9 +161,16 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-card">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-card"
+      >
         <div className="mb-4 flex items-start justify-between">
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 id={titleId} className="text-base font-semibold text-slate-900">
             {property ? "Edit Property" : "Add Property"}
           </h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Close">
@@ -179,6 +189,7 @@ export default function PropertyFormModal({ property, onSubmit, onClose }: Prope
             </label>
             <input
               id="property-title"
+              data-modal-autofocus
               type="text"
               value={values.title}
               onChange={(e) => update("title", e.target.value)}

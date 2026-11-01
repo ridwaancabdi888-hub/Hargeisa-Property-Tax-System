@@ -35,6 +35,27 @@ const sampleProperty: PropertyListing = {
 };
 
 describe("PropertyFormModal", () => {
+  test("exposes an accessible dialog and closes it with Escape", async () => {
+    const onClose = vi.fn();
+    render(<PropertyFormModal onSubmit={vi.fn()} onClose={onClose} />);
+
+    expect(screen.getByRole("dialog", { name: "Add Property" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toHaveFocus();
+
+    await userEvent.keyboard("{Escape}");
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  test("keeps keyboard focus inside the dialog", async () => {
+    render(<PropertyFormModal onSubmit={vi.fn()} onClose={vi.fn()} />);
+
+    const closeButton = screen.getByRole("button", { name: "Close" });
+    closeButton.focus();
+    await userEvent.keyboard("{Shift>}{Tab}{/Shift}");
+
+    expect(screen.getByRole("button", { name: "Create Property" })).toHaveFocus();
+  });
+
   test("releases staged image previews when the form closes", async () => {
     const createObjectURL = vi.fn(() => "blob:property-preview");
     const revokeObjectURL = vi.fn();
