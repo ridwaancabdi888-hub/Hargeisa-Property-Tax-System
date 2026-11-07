@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Bell, Building2, CheckCircle2, Trash2 } from "lucide-react";
 import { listNotifications, markNotificationRead } from "../../lib/notificationsApi";
 import type { Notification } from "../../types/notification";
@@ -24,6 +24,10 @@ export default function NotificationsDropdown() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelId = useId();
+  const headingId = useId();
 
   async function refresh() {
     try {
@@ -51,6 +55,24 @@ export default function NotificationsDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const firstAction = panelRef.current?.querySelector<HTMLElement>("button:not([disabled])");
+    (firstAction ?? panelRef.current)?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+
+      event.preventDefault();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   async function handleMarkRead(notification: Notification) {
     if (notification.isRead) return;
     setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)));
@@ -65,23 +87,39 @@ export default function NotificationsDropdown() {
   return (
     <div className="relative" ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
-        aria-label="Notifications"
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        aria-haspopup="dialog"
         onClick={() => setIsOpen((v) => !v)}
         className="relative text-slate-500 hover:text-slate-700"
       >
         <Bell size={17} />
         {unreadCount > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+          <span
+            aria-hidden="true"
+            className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white"
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-card">
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-labelledby={headingId}
+          tabIndex={-1}
+          className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-card"
+        >
           <div className="border-b border-slate-100 px-4 py-2.5">
-            <p className="text-sm font-semibold text-slate-900">Notifications</p>
+            <p id={headingId} className="text-sm font-semibold text-slate-900">
+              Notifications
+            </p>
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
@@ -94,6 +132,7 @@ export default function NotificationsDropdown() {
                     key={n.id}
                     type="button"
                     onClick={() => handleMarkRead(n)}
+                    aria-label={`${n.isRead ? "Read" : "Unread"} notification: ${n.message}`}
                     className={`flex w-full items-start gap-3 border-b border-slate-50 px-4 py-3 text-left last:border-0 hover:bg-slate-50 ${
                       n.isRead ? "" : "bg-blue-50/40"
                     }`}
